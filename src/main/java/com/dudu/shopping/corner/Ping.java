@@ -10,7 +10,6 @@ import javax.ws.rs.Path;
 public class Ping {
 
     @GET
-    @Path("/")
     public String ping() {
         return "ok";
     }
