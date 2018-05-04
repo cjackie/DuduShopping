@@ -1,5 +1,9 @@
 package com.dudu.shopping.corner;
 
+import com.dudu.shopping.Secure;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
@@ -8,9 +12,19 @@ import javax.ws.rs.Path;
  */
 @Path("/ping")
 public class Ping {
+    private static Logger logger = LogManager.getLogger(Ping.class);
 
     @GET
     public String ping() {
+        logger.info("hello");
+        return "ok";
+    }
+
+    @Secure
+    @GET
+    @Path("/secure")
+    public String securePing() {
+        logger.info("hello security");
         return "ok";
     }
 }
