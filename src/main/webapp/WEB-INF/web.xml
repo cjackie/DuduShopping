@@ -6,6 +6,11 @@
                       http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
          version="3.0"
          metadata-complete="true">
+    <servlet>
+        <servlet-name>init</servlet-name>
+        <servlet-class>com.dudu.WebInit</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
     <servlet>
         <servlet-name>REST</servlet-name>
@@ -16,7 +21,7 @@
             <param-value>com.dudu.shopping</param-value>
         </init-param>
 
-        <load-on-startup>1</load-on-startup>
+        <load-on-startup>2</load-on-startup>
     </servlet>
 
     <servlet-mapping>

@@ -29,9 +29,12 @@ public class SecurityProvider implements ReaderInterceptor, ContainerRequestFilt
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-
-        requestContext.getUriInfo().getAbsolutePath();
         logger.info("request filter");
+
+        // TODO
+
+
+
     }
 
     @Override
