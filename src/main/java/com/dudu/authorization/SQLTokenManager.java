@@ -4,6 +4,8 @@ package com.dudu.authorization;
 import com.dudu.common.CryptoUtil;
 import com.dudu.database.DBHelper;
 import com.dudu.database.ZetaMap;
+import com.dudu.users.User;
+import com.dudu.users.UsersManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -80,7 +82,11 @@ public class SQLTokenManager implements TokenManager {
             String refreshToken = CryptoUtil.base64(bytes);
             Date issuedAt = new Date();
             int expiresIn = 60*60; // two hours
-            String scope = ScopeRepository.getInstance().scope(clientId);
+
+
+            UsersManager usersManager = new UsersManager(source);
+            User user = usersManager.getUser(Long.parseLong(clientId));
+            String scope = user.getScope();
 
             String sql = "INSERT INTO Tokens (UserId, Token, RefreshToken, ExpiresIn, IssueAt, Scope) VALUES (?,?,?,?,?,?)";
             List<ZetaMap> zetaMaps = DBHelper.getHelper().execUpdateToZetaMaps(conn, sql, new String[]{"Id"}, clientId, token, refreshToken, expiresIn, issuedAt, scope);
@@ -95,9 +101,12 @@ public class SQLTokenManager implements TokenManager {
     @Override
     public Token refreshToken(String clientId, String refreshToken) throws Exception {
         try (Connection conn = source.getConnection()) {
-            // check if refreshable
-            // TODO
-            throw new NotImplementedException();
+            Token token = getToken(clientId);
+            if (!token.getRefreshToken().equals(refreshToken))
+                throw new RuntimeException("Invalid refresh token");
+
+            invalidate(token);
+            return createToken(clientId);
         }
     }
 
@@ -107,7 +116,7 @@ public class SQLTokenManager implements TokenManager {
 
         try (Connection conn = source.getConnection()) {
             int ret = DBHelper.getHelper().execUpdate(conn, "UPDATE Tokens SET IsValid = 0 WHERE Token = ? AND UserId", token.getToken(), token.getUserId());
-            if (ret != 0)
+            if (ret != 1)
                 throw new IllegalArgumentException("Failed to invalidate token " + token);
         }
     }

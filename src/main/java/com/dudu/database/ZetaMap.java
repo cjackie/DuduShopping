@@ -95,4 +95,12 @@ public class ZetaMap extends LinkedHashMap<String, Object> {
         return getDate(col, calendar.getTime());
     }
 
+    public char getChar(String col, char defaultVal) {
+        return getString(col, String.valueOf(defaultVal)).charAt(0);
+    }
+
+    public char getChar(String col) {
+        return getChar(col, '\0');
+    }
+
 }
