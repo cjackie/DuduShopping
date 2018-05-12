@@ -5,6 +5,7 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.sql.DataSource;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
@@ -12,23 +13,18 @@ import java.util.Properties;
 /**
  * Created by chaojiewang on 5/10/18.
  */
-public class TestUsersManager {
+public class UsersManagerTest extends TestBase {
     UsersManager manager;
 
     @Before
     public void setup() {
+        super.setup();
         try {
-            String conf = System.getenv("DB_CONF");
-            if (conf == null)
-                conf = "./conf/db.conf";
+            DataSource source = DBManager.getManager().getDataSource("DuduShopping");
+            if (!dbReady || source == null)
+                return;
 
-            try (InputStream in = new FileInputStream(conf)) {
-                Properties properties = new Properties();
-                properties.load(in);
-
-                DBManager.init(properties);
-                manager = new UsersManager(DBManager.getManager().getDataSource("DuduShopping"));
-            }
+            manager = new UsersManager(source);
         } catch (Exception e) {
             System.out.println(e);
         }

@@ -1,4 +1,4 @@
-package com.dudu.authorization;
+package com.dudu.users;
 
 import com.dudu.database.ZetaMap;
 
