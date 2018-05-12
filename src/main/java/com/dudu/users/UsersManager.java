@@ -13,11 +13,11 @@ import java.util.List;
  * Created by chaojiewang on 5/10/18.
  */
 public class UsersManager {
-
     public static final char USER_ROLE_CUSTOMER = 'C';
     public static final char USER_ROLE_SALE_AGENT = 'S';
     public static final String SCOPE_CUSTOMER = "customer";
     public static final String SCOPE_SALE_AGENT = "sale agent";
+    private static final String SALT = "pom^bc&yjena!~sixdb42*)sjd";
 
     private DataSource source;
 
@@ -35,9 +35,9 @@ public class UsersManager {
      */
     public User login(String login, String password, char role) throws Exception {
         try (Connection conn = source.getConnection()) {
-            StoredProcedure sp = new StoredProcedure(conn, "UserLogin");
+            StoredProcedure sp = new StoredProcedure(conn, "sp_UserLogin");
             sp.addParameter("Login", login);
-            sp.addParameter("Password", password);
+            sp.addParameter("Password", saltedHash(password));
             sp.addParameter("Role", role);
             List<ZetaMap> zmaps = sp.execToZetaMaps();
             if (zmaps.size() == 0)
@@ -60,7 +60,8 @@ public class UsersManager {
      */
     public User getUser(String login, String password, char role) throws Exception {
         try (Connection conn = source.getConnection()) {
-            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, "SELECT * FROM Users WHERE Login = ? AND password = ? AND role = ?", login, password, role);
+            String sql = "SELECT * FROM Users WHERE Login = ? AND password = ? AND role = ?";
+            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, login, saltedHash(password), role);
             return User.from(zetaMaps.get(0));
         }
     }
@@ -92,7 +93,7 @@ public class UsersManager {
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_CreateUser");
             sp.addParameter("Login", login);
-            sp.addParameter("Password", CryptoUtil.sha256base64(password));
+            sp.addParameter("Password", saltedHash(password));
             sp.addParameter("Role", role);
             sp.addParameter("Scope", scope);
             sp.addParameter("Address", address != null ? address : "");
@@ -105,5 +106,9 @@ public class UsersManager {
             long userId = zmap.getLong("UserId");
             return getUser(userId);
         }
+    }
+
+    private String saltedHash(String password) {
+        return CryptoUtil.sha256base64(password + SALT);
     }
 }

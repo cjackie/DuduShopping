@@ -36,8 +36,14 @@ public class DBHelper {
     public List<ZetaMap> execToZetaMaps(Connection con, String sql, Object... parameters) throws SQLException {
         logger.info("execToZetaMap: " + sql);
         try (PreparedStatement ps = con.prepareStatement(sql)) {
-            for (int i = 1; i <= parameters.length; i++)
-                ps.setObject(i, parameters[i-1]);
+            for (int i = 1; i <= parameters.length; i++) {
+                Object param = parameters[i-1];
+                if (param instanceof Character)
+                    ps.setObject(i, param.toString());
+                else
+                    ps.setObject(i, param);
+            }
+
 
             return execToZetaMaps(ps);
         }
@@ -62,8 +68,14 @@ public class DBHelper {
     public int execUpdate(Connection con, String sql,  Object... parameters) throws SQLException {
         logger.info("execUpdate: " + sql);
         try (PreparedStatement ps = con.prepareStatement(sql)) {
-            for (int i = 1; i <= parameters.length; i++)
-                ps.setObject(i, parameters[i-1]);
+            for (int i = 1; i <= parameters.length; i++) {
+                Object param = parameters[i-1];
+                if (param instanceof Character)
+                    ps.setObject(i, param.toString());
+                else
+                    ps.setObject(i, param);
+            }
+
 
             return ps.executeUpdate();
         }
@@ -81,8 +93,14 @@ public class DBHelper {
     public List<ZetaMap> execUpdateToZetaMaps(Connection con, String sql, String generatedKeys[], Object... parameters) throws SQLException {
         logger.info("execUpdate: " + sql);
         try (PreparedStatement ps = con.prepareStatement(sql, generatedKeys)) {
-            for (int i = 1; i <= parameters.length; i++)
-                ps.setObject(i, parameters[i-1]);
+            for (int i = 1; i <= parameters.length; i++) {
+                Object param = parameters[i-1];
+                if (param instanceof Character)
+                    ps.setObject(i, param.toString());
+                else
+                    ps.setObject(i, param);
+            }
+
 
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();

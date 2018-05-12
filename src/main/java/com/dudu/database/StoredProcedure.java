@@ -23,6 +23,8 @@ public class StoredProcedure {
     public void addParameter(String name, Object value) {
         if (value instanceof Date)
             parameters.put(name, new java.sql.Timestamp(((Date) value).getTime()));
+        else if (value instanceof Character)
+            parameters.put(name, value.toString());
         else
             parameters.put(name, value);
     }
@@ -43,8 +45,12 @@ public class StoredProcedure {
         sql.append(")}");
 
         try (CallableStatement sp = con.prepareCall(sql.toString())) {
-            for (String param : parameters.keySet())
-                sp.setObject(param, parameters.get(param));
+            for (String param : parameters.keySet()) {
+                Object val = parameters.get(param);
+                if (val instanceof Character)
+                    val = val.toString();
+                sp.setObject(param, val);
+            }
 
             sp.execute();
             ResultSet rs = sp.getResultSet();
