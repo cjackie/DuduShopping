@@ -1,4 +1,4 @@
-package com.dudu.shopping;
+package com.dudu.rest;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;

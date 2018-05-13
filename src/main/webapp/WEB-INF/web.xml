@@ -18,7 +18,7 @@
 
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>com.dudu.shopping</param-value>
+            <param-value>com.dudu.rest</param-value>
         </init-param>
 
         <load-on-startup>2</load-on-startup>

@@ -1,4 +1,4 @@
-package com.dudu.shopping;
+package com.dudu.rest;
 
 import javax.ws.rs.NameBinding;
 import java.lang.annotation.ElementType;

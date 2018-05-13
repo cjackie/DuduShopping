@@ -1,4 +1,4 @@
-package com.dudu.shopping;
+package com.dudu.rest;
 
 /**
  * Created by chaojiewang on 5/5/18.

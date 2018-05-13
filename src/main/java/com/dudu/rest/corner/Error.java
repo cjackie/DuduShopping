@@ -1,4 +1,4 @@
-package com.dudu.shopping.corner;
+package com.dudu.rest.corner;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
