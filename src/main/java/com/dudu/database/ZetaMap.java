@@ -103,4 +103,17 @@ public class ZetaMap extends LinkedHashMap<String, Object> {
         return getChar(col, '\0');
     }
 
+    public Object getObject(String col, Object defaultVal) {
+        if (!containsKey(col)) {
+            logger.warn("column " + col + " of type " + Object.class.getName() + " not found.");
+            return defaultVal;
+        }
+
+        return get(col);
+    }
+
+    public Object getObject(String col) {
+        return getObject(col, null);
+    }
+
 }

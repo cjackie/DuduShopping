@@ -29,4 +29,8 @@ public class TestBase {
             System.out.println(e);
         }
     }
+
+    protected void println(Object o) {
+        System.out.println(o);
+    }
 }

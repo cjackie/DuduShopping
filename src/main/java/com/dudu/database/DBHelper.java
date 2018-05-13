@@ -3,11 +3,9 @@ package com.dudu.database;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -40,10 +38,11 @@ public class DBHelper {
                 Object param = parameters[i-1];
                 if (param instanceof Character)
                     ps.setObject(i, param.toString());
+                else if (param instanceof Date)
+                    ps.setObject(i, new Timestamp(((Date) param).getTime()));
                 else
                     ps.setObject(i, param);
             }
-
 
             return execToZetaMaps(ps);
         }
@@ -72,10 +71,11 @@ public class DBHelper {
                 Object param = parameters[i-1];
                 if (param instanceof Character)
                     ps.setObject(i, param.toString());
+                else if (param instanceof Date)
+                    ps.setObject(i, new Timestamp(((Date) param).getTime()));
                 else
                     ps.setObject(i, param);
             }
-
 
             return ps.executeUpdate();
         }
@@ -90,17 +90,18 @@ public class DBHelper {
      * @return
      * @throws SQLException
      */
-    public List<ZetaMap> execUpdateToZetaMaps(Connection con, String sql, String generatedKeys[], Object... parameters) throws SQLException {
+    public List<ZetaMap> execUpdateToZetaMaps(Connection con, String sql, String[] generatedKeys, Object... parameters) throws SQLException {
         logger.info("execUpdate: " + sql);
         try (PreparedStatement ps = con.prepareStatement(sql, generatedKeys)) {
             for (int i = 1; i <= parameters.length; i++) {
                 Object param = parameters[i-1];
                 if (param instanceof Character)
                     ps.setObject(i, param.toString());
+                else if (param instanceof Date)
+                    ps.setObject(i, new Timestamp(((Date) param).getTime()));
                 else
                     ps.setObject(i, param);
             }
-
 
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();

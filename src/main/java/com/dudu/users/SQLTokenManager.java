@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -63,7 +64,7 @@ public class SQLTokenManager implements TokenManager, Runnable  {
             throw new IllegalArgumentException("clientId can't be null");
 
         try (Connection conn = source.getConnection()) {
-            String sql = "SELECT * FROM Tokens WHERE IsValid = 1 AND UserId = ? AND DATEADD(SECOND, ExpiresIn, IssuedAt) < SYSDATETIME() ORDER BY DATEADD(SECOND, ExpiresIn, IssuedAt) DESC ";
+            String sql = "SELECT * FROM Tokens WHERE IsValid = 1 AND UserId = ? AND DATEADD(SECOND, ExpiresIn, IssuedAt) > SYSDATETIME() ORDER BY IssuedAt DESC";
             List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, clientId);
 
             if (zetaMaps.size() == 0) {
@@ -100,12 +101,12 @@ public class SQLTokenManager implements TokenManager, Runnable  {
             User user = usersManager.getUser(Long.parseLong(clientId));
             String scope = user.getScope();
 
-            String sql = "INSERT INTO Tokens (UserId, Token, RefreshToken, ExpiresIn, IssueAt, Scope) VALUES (?,?,?,?,?,?)";
+            String sql = "INSERT INTO Tokens (UserId, Token, RefreshToken, ExpiresIn, IssuedAt, Scope) VALUES (?,?,?,?,?,?)";
             List<ZetaMap> zetaMaps = DBHelper.getHelper().execUpdateToZetaMaps(conn, sql, new String[]{"Id"}, clientId, token, refreshToken, expiresIn, issuedAt, scope);
 
-            int id = zetaMaps.get(0).getInt("Id");
+            BigDecimal id = (BigDecimal) zetaMaps.get(0).getObject("Id");
             sql = "SELECT * FROM Tokens WHERE Id = ?";
-            zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, id);
+            zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, id.toBigIntegerExact().longValue());
             Token tokenObj = Token.from(zetaMaps.get(0));
             // cache
             cachedTokens.put(tokenKey(clientId, tokenObj.getToken()), tokenObj);
@@ -124,8 +125,8 @@ public class SQLTokenManager implements TokenManager, Runnable  {
 
             Token oldToken = Token.from(zetaMaps.get(0));
             // check on the refresh token
-            Date issueAt = oldToken.getIssuedAt();
-            if (issueAt.toInstant().plusSeconds(oldToken.getExpiresIn()*2).compareTo(Instant.now()) <= 0)
+            Date issuedAt = oldToken.getIssuedAt();
+            if (issuedAt.toInstant().plusSeconds(oldToken.getExpiresIn()*2).compareTo(Instant.now()) <= 0)
                 throw new IllegalArgumentException("refresh token is expired");
 
             // new token

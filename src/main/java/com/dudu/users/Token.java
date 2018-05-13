@@ -16,7 +16,7 @@ public class Token {
     private int expiresIn;
     private String userId;
     private List<String> scope;
-    private int id;
+    private long id;
     private Date issuedAt;
 
     public static Token from(ZetaMap zmap) {
@@ -28,7 +28,7 @@ public class Token {
         String scopes = zmap.getString("Scope");
         token.scope = new ArrayList<>();
         Collections.addAll(token.scope, scopes.split(","));
-        token.id = zmap.getInt("Id");
+        token.id = zmap.getLong("Id");
         token.issuedAt = zmap.getDate("IssuedAt");
 
         return token;
@@ -51,7 +51,7 @@ public class Token {
         return scope;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
