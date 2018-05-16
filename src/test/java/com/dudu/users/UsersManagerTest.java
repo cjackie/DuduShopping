@@ -1,14 +1,12 @@
 package com.dudu.users;
 
+import com.dudu.common.TestBase;
 import com.dudu.database.DBManager;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.sql.DataSource;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Properties;
 
 /**
  * Created by chaojiewang on 5/10/18.

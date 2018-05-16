@@ -1,4 +1,4 @@
-package com.dudu.users;
+package com.dudu.common;
 
 import com.dudu.database.DBManager;
 

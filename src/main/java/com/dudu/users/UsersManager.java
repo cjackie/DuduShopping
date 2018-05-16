@@ -4,20 +4,36 @@ import com.dudu.common.CryptoUtil;
 import com.dudu.database.DBHelper;
 import com.dudu.database.StoredProcedure;
 import com.dudu.database.ZetaMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
+ * TODO implement cache to improve read performance.
  * Created by chaojiewang on 5/10/18.
  */
 public class UsersManager {
+
     public static final char USER_ROLE_CUSTOMER = 'C';
     public static final char USER_ROLE_SALE_AGENT = 'S';
     public static final String SCOPE_CUSTOMER = "customer";
     public static final String SCOPE_SALE_AGENT = "sale agent";
     private static final String SALT = "pom^bc&yjena!~sixdb42*)sjd";
+    private static final ConcurrentHashMap<String, User> usersCached = new ConcurrentHashMap<>();
+    private static Logger logger = LogManager.getLogger(UsersManager.class);
+
+    static {
+        // simple clean up
+        BackgroundService.getInstance().schedule(() -> {
+            logger.info("clearing cache of size " + usersCached.size());
+            usersCached.clear();
+        }, 1, TimeUnit.HOURS);
+    }
 
     private DataSource source;
 

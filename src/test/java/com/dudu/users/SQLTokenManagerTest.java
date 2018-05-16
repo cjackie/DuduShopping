@@ -1,5 +1,6 @@
 package com.dudu.users;
 
+import com.dudu.common.TestBase;
 import com.dudu.database.DBManager;
 import org.junit.Assume;
 import org.junit.Before;
