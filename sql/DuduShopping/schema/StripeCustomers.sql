@@ -1,0 +1,6 @@
+DROP TABLE StripeCustomers;
+CREATE TABLE StripeCustomers (
+  UserId BIGINT REFERENCES Users(UserId) UNIQUE NOT NULL,
+  CustomerId VARCHAR (50) NOT NULL,
+  CreatedAt DATETIME NOT NULL DEFAULT SYSDATETIME()
+);
