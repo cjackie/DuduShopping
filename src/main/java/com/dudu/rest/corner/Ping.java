@@ -1,6 +1,6 @@
-package com.dudu.shopping.corner;
+package com.dudu.rest.corner;
 
-import com.dudu.shopping.Secure;
+import com.dudu.rest.Secure;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

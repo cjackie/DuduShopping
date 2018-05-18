@@ -6,7 +6,7 @@ import org.junit.Test;
 /**
  * Created by chaojiewang on 4/29/18.
  */
-public class TestCryptoUtil {
+public class CryptoUtilTest {
 
     @Test
     public void test() {

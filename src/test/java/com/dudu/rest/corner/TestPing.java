@@ -1,7 +1,7 @@
-package com.dudu.shopping.corner;
+package com.dudu.rest.corner;
 
-import com.dudu.shopping.RestJsonProvider;
-import com.dudu.shopping.RestTestBase;
+import com.dudu.rest.RestJsonProvider;
+import com.dudu.rest.RestTestBase;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;

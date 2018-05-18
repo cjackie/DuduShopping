@@ -1,4 +1,4 @@
-package com.dudu.shopping;
+package com.dudu.rest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

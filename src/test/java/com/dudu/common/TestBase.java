@@ -1,19 +1,17 @@
-package com.dudu.authorization;
+package com.dudu.common;
 
 import com.dudu.database.DBManager;
-import org.junit.Before;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Created by chaojiewang on 5/9/18.
+ * Created by chaojiewang on 5/12/18.
  */
-public class TestSQLTokenManager {
-    SQLTokenManager manager;
+public class TestBase {
 
-    @Before
+    protected boolean dbReady;
     public void setup() {
         try {
             String conf = System.getenv("DB_CONF");
@@ -25,17 +23,14 @@ public class TestSQLTokenManager {
                 properties.load(in);
 
                 DBManager.init(properties);
-                SQLTokenManager.init(DBManager.getManager().getDataSource("DuduShopping"));
-                manager = SQLTokenManager.getManager();
+                dbReady = true;
             }
         } catch (Exception e) {
             System.out.println(e);
         }
     }
 
-
-    public void createToken() throws Exception {
-        Token token = manager.createToken("jack");
-
+    protected void println(Object o) {
+        System.out.println(o);
     }
 }
