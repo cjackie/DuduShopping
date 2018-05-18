@@ -39,10 +39,23 @@ public class ShoppingRequestManagerTest extends TestBase {
         Assume.assumeTrue(shoppingRequestManager != null);
 
         User jack = usersManager.getUser(1);
-        ShoppingRequest request = shoppingRequestManager.createRequest(jack, "Want a toy");
+        ShoppingRequest request = shoppingRequestManager.createRequest(jack, "Want a toy 2");
         println(request);
     }
 
-    // TODO
+    @Test
+    public void cancelRequest() throws Exception {
+        Assume.assumeTrue(shoppingRequestManager != null);
 
+        User jack = usersManager.getUser(1);
+        long requestId = 3;
+        int error = shoppingRequestManager.cancelRequest(jack, requestId);
+        println(error);
+    }
+
+    @Test
+    public void acceptRequest() throws Exception {
+        // TODO
+
+    }
 }
