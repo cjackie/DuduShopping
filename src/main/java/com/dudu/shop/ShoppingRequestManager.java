@@ -30,6 +30,7 @@ public class ShoppingRequestManager {
 
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingRequestAccept");
+            sp.addParameter("UserId", user.getUserId());
             sp.addParameter("ShoppingRequestId", shoppingRequestId);
             sp.addParameter("ShoppingOfferId", shoppingOfferId);
             List<ZetaMap> zetaMaps = sp.execToZetaMaps();
@@ -42,6 +43,7 @@ public class ShoppingRequestManager {
 
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingRequestCancel");
+            sp.addParameter("UserId", user.getUserId());
             sp.addParameter("ShoppingRequestId", shoppingRequestId);
 
             List<ZetaMap> zetaMaps = sp.execToZetaMaps();
