@@ -1,11 +1,11 @@
 package com.dudu.shop;
 
+import com.dudu.database.DBHelper;
 import com.dudu.database.StoredProcedure;
 import com.dudu.database.ZetaMap;
 import com.dudu.users.User;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -50,11 +50,45 @@ public class ShoppingOfferManager {
                 throw new IllegalArgumentException("Failed to create a shopping offer.");
             }
 
-            return getShoppingOffer(zmap.getInt("ShoppingOfferId"));
+            return getShoppingOffer(zmap.getLong("ShoppingOfferId"));
         }
     }
 
-    ShoppingOffer getShoppingOffer(long ShoppingOfferId) throws Exception {
-        throw new NotImplementedException();
+    /**
+     *
+     * @param user customer is able to reject
+     * @param shoppingOfferId
+     * @return
+     * @throws Exception
+     */
+    public int reject(User user, long shoppingOfferId) throws Exception {
+        try (Connection conn = source.getConnection()) {
+            StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingOfferReject");
+            sp.addParameter("UserId", user.getUserId());
+            sp.addParameter("ShoppingOfferId", shoppingOfferId);
+
+            ZetaMap zmap = sp.execToZetaMaps().get(0);
+            return zmap.getInt("Error");
+        }
+    }
+
+    public int pull(User user, long shoppingOfferId) throws Exception {
+        try (Connection conn = source.getConnection()) {
+            StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingOfferPull");
+
+            sp.addParameter("UserId", user.getUserId());
+            sp.addParameter("ShoppingOfferId", user.getUserId());
+            ZetaMap zmap = sp.execToZetaMaps().get(0);
+            return zmap.getInt("Error");
+        }
+    }
+
+    ShoppingOffer getShoppingOffer(long shoppingOfferId) throws Exception {
+        try (Connection conn = source.getConnection()) {
+            String sql = "SELECT * FROM ShoppingOffers WHERE ShoppingOfferId = ?";
+            ZetaMap zmap = DBHelper.getHelper().execToZetaMaps(conn, sql, shoppingOfferId).get(0);
+
+            return ShoppingOffer.from(zmap);
+        }
     }
 }

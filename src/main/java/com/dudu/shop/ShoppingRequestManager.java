@@ -26,8 +26,6 @@ public class ShoppingRequestManager {
     }
 
     public int acceptRequest(User user, long shoppingRequestId, long shoppingOfferId) throws Exception {
-        checkUser(user);
-
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingRequestAccept");
             sp.addParameter("UserId", user.getUserId());
@@ -39,8 +37,6 @@ public class ShoppingRequestManager {
     }
 
     public int cancelRequest(User user, long shoppingRequestId) throws Exception {
-        checkUser(user);
-
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingRequestCancel");
             sp.addParameter("UserId", user.getUserId());
@@ -52,8 +48,6 @@ public class ShoppingRequestManager {
     }
 
     public ShoppingRequest createRequest(User user, String text) throws Exception {
-        checkUser(user);
-
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingRequestCreate");
             sp.addParameter("UserId", user.getUserId());
@@ -69,11 +63,6 @@ public class ShoppingRequestManager {
 
             return getRequest(shoppingRequestId);
         }
-    }
-
-    private void checkUser(User user) throws Exception {
-        if (user.getRole() != UsersManager.USER_ROLE_CUSTOMER)
-            throw new IllegalArgumentException("Only customers can do shopping requests");
     }
 
     ShoppingRequest getRequest(long id) throws Exception {

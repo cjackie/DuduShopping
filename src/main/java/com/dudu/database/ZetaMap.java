@@ -3,9 +3,11 @@ package com.dudu.database;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -66,12 +68,19 @@ public class ZetaMap extends LinkedHashMap<String, Object> {
     }
 
     public double getDouble(String col, double defaultVal) {
-        if (!containsKey(col) || !(get(col) instanceof Double)) {
+        if (!containsKey(col) || (!(get(col) instanceof Double) && !(get(col) instanceof BigDecimal))) {
             logger.warn("column " + col + " of type " + Double.class.getName() + " not found.");
             return defaultVal;
         }
 
-        return (Double) get(col);
+        Object number = get(col);
+        if (number instanceof Double) {
+            return (Double) get(col);
+        } else if (number instanceof BigDecimal) {
+            return ((BigDecimal) number).doubleValue();
+        } else {
+            return defaultVal;
+        }
     }
 
     public double getDouble(String col) {
@@ -79,20 +88,18 @@ public class ZetaMap extends LinkedHashMap<String, Object> {
     }
 
     public Date getDate(String col, Date defaultVal) {
-        if (!containsKey(col) || !(get(col) instanceof Date)) {
-            logger.warn("column " + col + " of type " + String.class.getName() + " not found.");
+        Object obj = get(col);
+        if (obj == null || (!(obj instanceof Timestamp) && !(obj instanceof Date))) {
+            logger.warn("column " + col + " of type " + Date.class.getName() + " not found.");
             return defaultVal;
         }
 
-        return (Date) get(col);
+        return new Date(((Date) obj).getTime());
     }
 
 
     public Date getDate(String col) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(0);
-
-        return getDate(col, calendar.getTime());
+        return getDate(col, null);
     }
 
     public char getChar(String col, char defaultVal) {

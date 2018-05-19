@@ -15,13 +15,13 @@ IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
 END
 
 SELECT @ShoppingOfferId = ShoppingOfferId FROM ShoppingOffers WHERE ShoppingOfferId = @ShoppingOfferId AND State = 'SO5'
-IF @@ERROR <> 0 OR @@ROWCOUNT <> 0 BEGIN
+IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
   SET @Error = 10
   GOTO ExitProc
 END
 
 UPDATE ShoppingOffers SET State = @State WHERE ShoppingOfferId = @ShoppingOfferId
-IF @@ERROR <> 0 OR @@ROWCOUNT <> 0 BEGIN
+IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
   SET @Error = 15
 END
 

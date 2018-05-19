@@ -35,4 +35,12 @@ IF @@ERROR <> 0 BEGIN
 END
 
 ExitProc:
+
+  IF @@TRANCOUNT <> 0 BEGIN
+    IF @Error <> 0
+      ROLLBACK
+    ELSE
+      COMMIT
+  END
+
   SELECT @Error AS Error

@@ -16,7 +16,15 @@ public class ShoppingOffer {
     private Date createdAt;
 
     public static ShoppingOffer from(ZetaMap zmap) {
-        return null;
+        ShoppingOffer offer = new ShoppingOffer();
+        offer.shoppingOfferId = zmap.getLong("ShoppingOfferId");
+        offer.shoppingRequestId = zmap.getLong("ShoppingRequestId");
+        offer.text = zmap.getString("Text");
+        offer.price = zmap.getDouble("Price");
+        offer.state = zmap.getString("State");
+        offer.createdAt = zmap.getDate("CreatedAt");
+
+        return offer;
     }
 
     ///////////////////////////////////////////////////////////////////
