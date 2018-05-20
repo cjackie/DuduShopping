@@ -4,7 +4,6 @@ import com.dudu.database.DBHelper;
 import com.dudu.database.StoredProcedure;
 import com.dudu.database.ZetaMap;
 import com.dudu.users.User;
-import com.dudu.users.UsersManager;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -14,11 +13,6 @@ import java.util.List;
  * Created by chaojiewang on 5/13/18.
  */
 public class ShoppingRequestManager {
-    private static final String STATE_PREFIX = "SR";
-    public static final String STATE_PLACED = STATE_PREFIX + "5";
-    public static final String STATE_CANCELLED = STATE_PREFIX + "10";
-    public static final String STATE_ACCEPTED = STATE_PREFIX + "15";
-
     private DataSource source;
 
     public ShoppingRequestManager(DataSource source) {

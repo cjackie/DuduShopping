@@ -14,12 +14,6 @@ import java.sql.Connection;
  * Created by chaojiewang on 5/18/18.
  */
 public class ShoppingOfferManager {
-    public static final String OFFER_PLACED = "SO5";
-    public static final String OFFER_SHOPPER_CANCELLED = "SO10";
-    public static final String OFFER_PULLED = "SO15";
-    public static final String OFFER_SHOPPER_REJECTED = "SO20";
-    public static final String OFFER_SHOPPER_ACCEPTED = "SO25";
-
     private static final Logger logger = LogManager.getLogger(ShoppingOfferManager.class);
     private DataSource source;
 
@@ -46,8 +40,8 @@ public class ShoppingOfferManager {
 
             int error = zmap.getInt("Error");
             if (error != 0) {
-                logger.error("Failed to create a shopping offer.");
-                throw new IllegalArgumentException("Failed to create a shopping offer.");
+                logger.error("Failed to create a shopping offer: code=" + error);
+                throw new IllegalArgumentException("Failed to create a shopping offer: code=" + error);
             }
 
             return getShoppingOffer(zmap.getLong("ShoppingOfferId"));
@@ -77,7 +71,7 @@ public class ShoppingOfferManager {
             StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingOfferPull");
 
             sp.addParameter("UserId", user.getUserId());
-            sp.addParameter("ShoppingOfferId", user.getUserId());
+            sp.addParameter("ShoppingOfferId", shoppingOfferId);
             ZetaMap zmap = sp.execToZetaMaps().get(0);
             return zmap.getInt("Error");
         }

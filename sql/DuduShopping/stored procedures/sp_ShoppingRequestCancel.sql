@@ -5,7 +5,6 @@ ALTER PROCEDURE sp_ShoppingRequestCancel(
 
 DECLARE @Error INT = 0
 DECLARE @RequestState VARCHAR(5) = 'SR10'
-DECLARE @OfferState VARCHAR(5) = 'SO10'
 
 SET NOCOUNT ON
 
@@ -17,7 +16,7 @@ IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
   GOTO ExitProc
 END
 
-SELECT @ShoppingRequestId = ShoppingRequestId FROM ShoppingRequests WHERE ShoppingRequestId = @ShoppingRequestId AND State = 'SR5'
+SELECT @ShoppingRequestId = ShoppingRequestId FROM ShoppingRequests WHERE ShoppingRequestId = @ShoppingRequestId AND State IN ('SR5', 'SR15')
 IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
   SET @Error = 10
   GOTO ExitProc
@@ -27,11 +26,6 @@ UPDATE ShoppingRequests SET State = @RequestState WHERE ShoppingRequestId = @Sho
 IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
   SET @Error = 15
   GOTO ExitProc
-END
-
-UPDATE ShoppingOffers SET State = @OfferState WHERE ShoppingRequestId = @ShoppingRequestId AND State = 'SO5'
-IF @@ERROR <> 0 BEGIN
-  SET @Error = 20
 END
 
 ExitProc:

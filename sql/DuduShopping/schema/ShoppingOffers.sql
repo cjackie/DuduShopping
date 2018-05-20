@@ -1,8 +1,8 @@
 
 -- Offers from sale agents
 -- state:
--- offer = SO5, shopper cancelled = SO10, sale agent pulled = SO15
---    shopper reject it = SO20, shopper accept it = SO25
+-- offer = SO5, sale agent pulled = SO15
+--    shopper reject it = SO20
 DROP TABLE ShoppingOffers;
 CREATE TABLE ShoppingOffers (
   UserId BIGINT REFERENCES Users(UserId),

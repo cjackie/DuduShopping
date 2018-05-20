@@ -9,6 +9,7 @@ import java.util.Date;
  */
 public class ShoppingRequest {
     private long shoppingRequestId;
+    private long ShoppingOfferAccepted;
     private long userId;
     private String text;
     private Date createdAt;
@@ -17,6 +18,7 @@ public class ShoppingRequest {
     public static ShoppingRequest from(ZetaMap zmap) {
         ShoppingRequest request = new ShoppingRequest();
         request.setShoppingRequestId(zmap.getLong("ShoppingRequestId"));
+        request.setShoppingOfferAccepted(zmap.getLong("ShoppingOfferAccepted"));
         request.setUserId(zmap.getLong("UserId"));
         request.setText(zmap.getString("Text"));
         request.setCreatedAt(zmap.getDate("CreatedAt"));
@@ -63,5 +65,13 @@ public class ShoppingRequest {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public long getShoppingOfferAccepted() {
+        return ShoppingOfferAccepted;
+    }
+
+    public void setShoppingOfferAccepted(long shoppingOfferAccepted) {
+        ShoppingOfferAccepted = shoppingOfferAccepted;
     }
 }

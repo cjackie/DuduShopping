@@ -17,9 +17,15 @@ IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
   GOTO ExitProc
 END
 
-INSERT INTO ShoppingOffers (ShoppingRequestId, Text, Price, State) VALUES (@ShoppingRequestId, @Text, @Price, @State)
+SELECT @ShoppingRequestId = ShoppingRequestId FROM ShoppingRequests WHERE ShoppingRequestId = @ShoppingRequestId AND State = 'SR5'
 IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
   SET @Error = 10
+  GOTO ExitProc
+END
+
+INSERT INTO ShoppingOffers (UserId, ShoppingRequestId, Text, Price, State) VALUES (@UserId, @ShoppingRequestId, @Text, @Price, @State)
+IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
+  SET @Error = 15
   GOTO ExitProc
 END
 
