@@ -8,35 +8,46 @@ import java.util.Date;
  * Created by chaojiewang on 5/13/18.
  */
 public class ShoppingRequest {
-    private long id;
+    private long shoppingRequestId;
+    private long ShoppingOfferAccepted;
     private long userId;
     private String text;
     private Date createdAt;
-    private int State;
+    private String state;
 
     public static ShoppingRequest from(ZetaMap zmap) {
         ShoppingRequest request = new ShoppingRequest();
-        request.setId(zmap.getLong("Id"));
-        request.setCreatedAt(zmap.getDate("CreatedAt"));
+        request.setShoppingRequestId(zmap.getLong("ShoppingRequestId"));
+        request.setShoppingOfferAccepted(zmap.getLong("ShoppingOfferAccepted"));
+        request.setUserId(zmap.getLong("UserId"));
         request.setText(zmap.getString("Text"));
-        request.setState(zmap.getInt("State"));
+        request.setCreatedAt(zmap.getDate("CreatedAt"));
+        request.setState(zmap.getString("State"));
         return request;
     }
 
     ///////////////////////////////
-    public long getId() {
-        return id;
+    public long getShoppingRequestId() {
+        return shoppingRequestId;
     }
 
-    void setId(long id) {
-        this.id = id;
+    public void setShoppingRequestId(long shoppingRequestId) {
+        this.shoppingRequestId = shoppingRequestId;
+    }
+
+    public long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(long userId) {
+        this.userId = userId;
     }
 
     public String getText() {
         return text;
     }
 
-    void setText(String text) {
+    public void setText(String text) {
         this.text = text;
     }
 
@@ -44,23 +55,23 @@ public class ShoppingRequest {
         return createdAt;
     }
 
-    void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
-    public int getState() {
-        return State;
+    public String getState() {
+        return state;
     }
 
-    void setState(int state) {
-        State = state;
+    public void setState(String state) {
+        this.state = state;
     }
 
-    public long getUserId() {
-        return userId;
+    public long getShoppingOfferAccepted() {
+        return ShoppingOfferAccepted;
     }
 
-    void setUserId(long userId) {
-        this.userId = userId;
+    public void setShoppingOfferAccepted(long shoppingOfferAccepted) {
+        ShoppingOfferAccepted = shoppingOfferAccepted;
     }
 }

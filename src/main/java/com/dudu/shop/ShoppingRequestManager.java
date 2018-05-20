@@ -4,7 +4,6 @@ import com.dudu.database.DBHelper;
 import com.dudu.database.StoredProcedure;
 import com.dudu.database.ZetaMap;
 import com.dudu.users.User;
-import com.dudu.users.UsersManager;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -14,11 +13,6 @@ import java.util.List;
  * Created by chaojiewang on 5/13/18.
  */
 public class ShoppingRequestManager {
-    private static final String STATE_PREFIX = "SR";
-    public static final String STATE_PLACED = STATE_PREFIX + "5";
-    public static final String STATE_CANCELLED = STATE_PREFIX + "10";
-    public static final String STATE_ACCEPTED = STATE_PREFIX + "15";
-
     private DataSource source;
 
     public ShoppingRequestManager(DataSource source) {
@@ -26,10 +20,9 @@ public class ShoppingRequestManager {
     }
 
     public int acceptRequest(User user, long shoppingRequestId, long shoppingOfferId) throws Exception {
-        checkUser(user);
-
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingRequestAccept");
+            sp.addParameter("UserId", user.getUserId());
             sp.addParameter("ShoppingRequestId", shoppingRequestId);
             sp.addParameter("ShoppingOfferId", shoppingOfferId);
             List<ZetaMap> zetaMaps = sp.execToZetaMaps();
@@ -38,10 +31,9 @@ public class ShoppingRequestManager {
     }
 
     public int cancelRequest(User user, long shoppingRequestId) throws Exception {
-        checkUser(user);
-
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingRequestCancel");
+            sp.addParameter("UserId", user.getUserId());
             sp.addParameter("ShoppingRequestId", shoppingRequestId);
 
             List<ZetaMap> zetaMaps = sp.execToZetaMaps();
@@ -50,8 +42,6 @@ public class ShoppingRequestManager {
     }
 
     public ShoppingRequest createRequest(User user, String text) throws Exception {
-        checkUser(user);
-
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingRequestCreate");
             sp.addParameter("UserId", user.getUserId());
@@ -67,11 +57,6 @@ public class ShoppingRequestManager {
 
             return getRequest(shoppingRequestId);
         }
-    }
-
-    private void checkUser(User user) throws Exception {
-        if (user.getRole() != UsersManager.USER_ROLE_CUSTOMER)
-            throw new IllegalArgumentException("Only customers can do shopping requests");
     }
 
     ShoppingRequest getRequest(long id) throws Exception {
