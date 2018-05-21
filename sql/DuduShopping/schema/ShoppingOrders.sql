@@ -1,0 +1,4 @@
+DROP TABLE ShoppingOrders
+CREATE TABLE ShoppingOrders(
+  OrderId BIGINT PRIMARY KEY IDENTITY,
+)

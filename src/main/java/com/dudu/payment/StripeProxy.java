@@ -4,6 +4,7 @@ import com.dudu.database.DBHelper;
 import com.dudu.database.ZetaMap;
 import com.stripe.Stripe;
 import com.stripe.model.Customer;
+import com.stripe.model.ExternalAccount;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -31,6 +32,7 @@ public class StripeProxy {
     public static void configure(DataSource source, String apiKey) {
         proxy.apiKey = apiKey;
         proxy.source = source;
+        Stripe.apiKey = apiKey;
     }
 
     /////////////////////////////////////////////
@@ -42,8 +44,6 @@ public class StripeProxy {
      * @throws Exception
      */
     synchronized public String createCustomer(String userId) throws Exception {
-        Stripe.apiKey = apiKey;
-
         // check if it has been created before
         try (Connection conn = source.getConnection()) {
             String sql = "SELECT * FROM StripeCustomers WHERE UserId = ?";
@@ -75,7 +75,78 @@ public class StripeProxy {
      * @return
      * @throws Exception
      */
-    synchronized public String createCard(String userId) throws Exception {
-        throw new NotImplementedException();
+    synchronized public String createCard(String userId, Card card) throws Exception {
+        Customer customer = retrieveCustomer(userId);
+        Map<String, Object> cardMap = new LinkedHashMap<>();
+        cardMap.put("number", card.getNumber());
+        cardMap.put("exp_month", card.getExpMonth());
+        cardMap.put("exp_year", card.getExpYear());
+        cardMap.put("cvc", card.getCvc());
+        ExternalAccount cardSaved = customer.getSources().create(cardMap);
+        return cardSaved.getId();
+    }
+
+    /**
+     * set payment method to a user
+     * @param userId
+     * @param stripeCardId
+     * @throws Exception
+     */
+    public void setPaymentMethod(String userId, String stripeCardId) throws Exception {
+        String sourceId;
+        try (Connection conn = source.getConnection()) {
+            String sql = "SELECT StripeCardSourceId FROM StripeCards WHERE UserId = ? AND Id = ?";
+            ZetaMap zmap = DBHelper.getHelper().execToZetaMaps(conn, sql, userId, stripeCardId).get(0);
+            sourceId = String.valueOf(zmap.getLong("StripeCardSourceId"));
+        }
+
+        Customer customer = retrieveCustomer(userId);
+        ExternalAccount externalAccount = customer.getSources().retrieve(sourceId);
+        if (externalAccount == null)
+            throw new IllegalArgumentException("Invalid sourceId");
+
+        Map<String, Object> updates = new LinkedHashMap<>();
+        updates.put("source", sourceId);
+        customer.update(updates);
+    }
+
+    private Customer retrieveCustomer(String userId) throws Exception {
+        try (Connection conn = source.getConnection()) {
+            Customer customer;
+            String sql = "SELECT * FROM StripeCustomers WHERE UserId = ?";
+            ZetaMap zetaMap = DBHelper.getHelper().execToZetaMaps(conn, sql, userId).get(0);
+            customer = Customer.retrieve(zetaMap.getString("CustomerId"));
+            return customer;
+        }
+    }
+
+    public class Card {
+        private String number;
+        private int expMonth;
+        private int expYear;
+        private int cvc;
+
+        public Card(String number, int expMonth, int expYear, int cvc) {
+            this.number = number;
+            this.expMonth = expMonth;
+            this.expYear = expYear;
+            this.cvc = cvc;
+        }
+
+        public String getNumber() {
+            return number;
+        }
+
+        public int getExpMonth() {
+            return expMonth;
+        }
+
+        public int getExpYear() {
+            return expYear;
+        }
+
+        public int getCvc() {
+            return cvc;
+        }
     }
 }
