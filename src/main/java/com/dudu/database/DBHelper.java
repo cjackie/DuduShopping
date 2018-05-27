@@ -1,5 +1,6 @@
 package com.dudu.database;
 
+import com.dudu.users.SQLTokenManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -79,6 +80,19 @@ public class DBHelper {
 
             return ps.executeUpdate();
         }
+    }
+
+    /**
+     * must be an SQL Data Manipulation Language (DML) statement, such as <code>INSERT</code>, <code>UPDATE</code> or
+     * <code>DELETE</code>; or an SQL statement that returns nothing,
+     * such as a DDL statement.
+     *
+     * @param ps
+     * @return
+     * @throws SQLException
+     */
+    public int execUpdate(PreparedStatement ps) throws SQLException {
+        return ps.executeUpdate();
     }
 
     /**

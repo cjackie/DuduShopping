@@ -13,10 +13,10 @@ import java.util.*;
  * interact with the stripe
  * Created by Chaojie (Jack) Wang on 5/17/18.
  */
-public class StripeProxy {
+/* package */ class StripeProxy {
     private static final Logger logger = LogManager.getLogger(StripeProxy.class);
 
-    /* package */ static StripeProxy getProxy() {
+    static StripeProxy getProxy() {
         return proxy;
     }
 
@@ -36,7 +36,7 @@ public class StripeProxy {
      * @return Customer ID
      * @throws Exception
      */
-    synchronized public String createCustomer(String description) throws Exception {
+    synchronized String createCustomer(String description) throws Exception {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("description", description);
         Customer customer = Customer.create(params);
@@ -51,7 +51,7 @@ public class StripeProxy {
      * @return sourceId
      * @throws Exception
      */
-    synchronized public String addSource(String customerId, String token) throws Exception {
+    synchronized String addSource(String customerId, String token) throws Exception {
         Customer customer = Customer.retrieve(customerId);
 
         Map<String, Object> params = new HashMap<>();
@@ -66,7 +66,7 @@ public class StripeProxy {
      * @param sourceId
      * @throws Exception
      */
-    public void setDefaultPaymentMethod(String customerId, String sourceId) throws Exception {
+    void setDefaultPaymentMethod(String customerId, String sourceId) throws Exception {
         Customer customer = Customer.retrieve(customerId);
 
         Map<String, Object> updates = new LinkedHashMap<>();
@@ -80,7 +80,7 @@ public class StripeProxy {
      * @param amount cents. for example
      * @return charge ID
      */
-    public String charge(String customerId, int amount) throws Exception {
+    String charge(String customerId, int amount) throws Exception {
         final String currency = "usd";
 
         Map<String, Object> charge = new LinkedHashMap<>();
