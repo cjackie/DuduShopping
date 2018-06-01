@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -179,6 +180,34 @@ public class StripeManager {
             int count = DBHelper.getHelper().execUpdate(conn, sql, reasonCode, userId);
             if (count != 1)
                 throw new IllegalArgumentException("Failed to lock User " + userId + " with reason code " + reasonCode);
+        }
+    }
+
+    /**
+     *
+     * @param userId
+     * @return
+     * @throws Exception
+     */
+    public StripeCustomer getCustomer(long userId) throws Exception {
+        try (Connection conn = source.getConnection()) {
+            String sql = "SELECT * FROM StripeCustomers WHERE UserId = ?";
+            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql , userId);
+            if (zetaMaps.size() != 1)
+                throw new IllegalArgumentException("Unknown userId " + userId);
+
+            StripeCustomer customer = StripeCustomer.from(zetaMaps.get(0));
+
+            sql = "SELECT * FROM StripeSources WHERE UserId = ?";
+            zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, userId);
+            List<StripeSource> sources = new ArrayList<>();
+            for (ZetaMap zetaMap : zetaMaps) {
+                StripeSource source = StripeSource.from(zetaMap);
+                sources.add(source);
+            }
+
+            customer.setSources(sources);
+            return customer;
         }
     }
 
