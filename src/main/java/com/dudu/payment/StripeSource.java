@@ -20,7 +20,7 @@ public class StripeSource {
         StripeSource stripeSource = new StripeSource();
         stripeSource.userId = zetaMap.getLong("UserId");
         stripeSource.sourceId = zetaMap.getString("SourceId");
-        stripeSource.isDefault = zetaMap.getInt("IsDefault") == 1;
+        stripeSource.isDefault = zetaMap.getBool("IsDefault");
         stripeSource.createdAt = zetaMap.getDate("CreatedAt");
         stripeSource.lastFour = zetaMap.getString("LastFour");
         stripeSource.expMonth = zetaMap.getInt("ExpMonth");

@@ -8,7 +8,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
 
@@ -121,6 +120,18 @@ public class ZetaMap extends LinkedHashMap<String, Object> {
 
     public Object getObject(String col) {
         return getObject(col, null);
+    }
+
+    public boolean getBool(String col, boolean defaultVal) {
+        if (!containsKey(col) || !(get(col) instanceof Boolean)) {
+            return defaultVal;
+        }
+
+        return (Boolean) get(col);
+    }
+
+    public boolean getBool(String col) {
+        return getBool(col, false);
     }
 
 }

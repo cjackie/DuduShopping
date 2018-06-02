@@ -80,7 +80,7 @@ import java.util.*;
      * @param amount cents. for example
      * @return charge ID
      */
-    String charge(String customerId, int amount) throws Exception {
+    String charge(String customerId, long amount) throws Exception {
         final String currency = "usd";
 
         Map<String, Object> charge = new LinkedHashMap<>();

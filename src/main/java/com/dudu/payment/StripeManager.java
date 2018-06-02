@@ -53,8 +53,8 @@ public class StripeManager {
         // update stripe, and then database
         StripeProxy.getProxy().setDefaultPaymentMethod(customerId, sourceId);
         try (Connection conn = source.getConnection()) {
-            String sql = "UPDATE StripeSources SET SourceId = ? WHERE UserId = ?";
-            int count = DBHelper.getHelper().execUpdate(conn, sql, sourceId, userId);
+            String sql = "UPDATE StripeSources SET IsDefault = 1 WHERE UserId = ? AND SourceId = ?";
+            int count = DBHelper.getHelper().execUpdate(conn, sql, userId, sourceId);
             if (count != 1) {
                 lock(userId, LOCK_SET_PAYMENT_METHOD);
                 logger.error("Failed to set default payment method: userId = " + userId + ", sourceId = " + sourceId);
@@ -79,7 +79,7 @@ public class StripeManager {
         String customerId = getCustomerId(userId);
 
         boolean newCustomer = customerId == null;
-        if (customerId == null) {
+        if (newCustomer) {
             // need to create one
             customerId = createCustomer(userId);
         }
@@ -91,7 +91,7 @@ public class StripeManager {
         // create sourceId and save it
         String sourceId = StripeProxy.getProxy().addSource(customerId, token);
         try (Connection conn = source.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement("INSERT INTO StripeSource (UserId, SourceId, LastFour, ExpMonth, ExpYear, Funding, Branch, IsDefault) VALUES (?,?,?,?,?,?,?,?)")) {
+            try (PreparedStatement ps = conn.prepareStatement("INSERT INTO StripeSources (UserId, SourceId, LastFour, ExpMonth, ExpYear, Funding, Brand, IsDefault) VALUES (?,?,?,?,?,?,?,?)")) {
                 ps.setObject(1, userId);
                 ps.setObject(2, sourceId);
                 ps.setObject(3, last4);
@@ -135,7 +135,7 @@ public class StripeManager {
      * @return customer ID
      * @throws Exception
      */
-    synchronized private String createCustomer(long userId) throws Exception {
+    synchronized public String createCustomer(long userId) throws Exception {
         // need to create one
         String customerId = StripeProxy.getProxy().createCustomer("UserId = " + userId);
         try (Connection conn = source.getConnection()) {
@@ -211,4 +211,40 @@ public class StripeManager {
         }
     }
 
+    /**
+     *
+     * @param orderId
+     * @param userId
+     * @param amount
+     * @return StripeChargeToken
+     * @throws Exception
+     */
+    public String charge(long orderId, long userId, long amount) throws Exception {
+        StripeCustomer customer = getCustomer(userId);
+        if (customer == null)
+            throw new IllegalStateException("Payment from user " + userId + " is missing");
+
+        if (isLocked(userId))
+            throw new IllegalStateException("User " + userId + " is locked");
+
+        String chargeId = StripeProxy.getProxy().charge(customer.getCustomerId(), amount);
+        try (Connection conn = source.getConnection()) {
+            String sql = "INSERT INTO StripeCharges(UserId, OrderId, Amount, StripeChargeToken) VALUES (?,?,?,?)";
+            int count = DBHelper.getHelper().execUpdate(conn, sql, userId, orderId, amount, chargeId);
+            if (count != 1) {
+                logger.warn("Failed to add stripe charge to database to user " + userId + ": StripeChargeToken=" +chargeId);
+                throw new IllegalStateException("Failed to add stripe charge to database to user " + userId + ": StripeChargeToken=" +chargeId);
+            }
+
+            return chargeId;
+        }
+    }
+
+    public StripeCharge getCharge(long userId, String stripeChargeToken) throws Exception {
+        try (Connection conn = source.getConnection()) {
+            String sql = "SELECT * FROM StripeCharges WHERE UserId = ? and StripeChargeToken = ?";
+            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, userId, stripeChargeToken);
+            return StripeCharge.from(zetaMaps.get(0));
+        }
+    }
 }
