@@ -4,23 +4,23 @@ ALTER PROCEDURE sp_ShoppingRequestCreate
   @Text VARCHAR(300) = ''
 ) AS
 
-DECLARE @State VARCHAR(5) = 'SR5'
-DECLARE @Error INT = 0
-DECLARE @ShoppingRequestId BIGINT = 0
+  DECLARE @State VARCHAR(5) = 'SR5'
+  DECLARE @Error INT = 0
+  DECLARE @ShoppingRequestId BIGINT = 0
 
-SET NOCOUNT ON
+  SET NOCOUNT ON
 
-SELECT @UserId = UserId FROM Users WHERE UserId = @UserId AND Role = 'C'
-IF @@ERROR <> 0  OR @@ROWCOUNT <> 1 BEGIN
-  SET @Error = 5
-  GOTO ExitProc
-END
+  SELECT @UserId = UserId FROM Users WHERE UserId = @UserId AND Role = 'C'
+  IF @@ERROR <> 0  OR @@ROWCOUNT <> 1 BEGIN
+    SET @Error = 5
+    GOTO ExitProc
+  END
 
-INSERT INTO ShoppingRequests (UserId, Text, State) VALUES (@UserId, @Text, @State)
-IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
-  SET @Error = 10
-END
-SET @ShoppingRequestId = @@IDENTITY
+  INSERT INTO ShoppingRequests (UserId, Text, State) VALUES (@UserId, @Text, @State)
+  IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
+    SET @Error = 10
+  END
+  SET @ShoppingRequestId = @@IDENTITY
 
 ExitProc:
   SELECT @Error AS Error, @ShoppingRequestId AS ShoppingRequestId
