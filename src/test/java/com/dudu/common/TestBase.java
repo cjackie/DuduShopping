@@ -12,6 +12,7 @@ import java.util.Properties;
 public class TestBase {
 
     protected boolean dbReady;
+    protected boolean ready;
     public void setup() {
         try {
             String conf = System.getenv("DB_CONF");
@@ -24,6 +25,7 @@ public class TestBase {
 
                 DBManager.init(properties);
                 dbReady = true;
+                ready = true;
             }
         } catch (Exception e) {
             System.out.println(e);
