@@ -31,7 +31,7 @@ All items selected by Dudu helpers are good and inexpensive. The customer can se
 - `master` branch only for merging and synchronization for other branches.
 development has to do in other branches. It is recommended for new features to create new branch with descriptive name.
 - All classes should be unit tested as much as possible. see example `src/test/java/com/dudu/payment/StripeManagerTest.java`
-- Write responsible and clean code
+- Write responsible, clean, and readable code.
 
 ### Documentation
 Document as much as possible for feature developers to pick up. Write javadoc and comments to indicate usage/intention when
