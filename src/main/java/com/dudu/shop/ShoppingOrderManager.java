@@ -1,6 +1,7 @@
 package com.dudu.shop;
 
 import com.dudu.database.DBHelper;
+import com.dudu.database.StoredProcedure;
 import com.dudu.database.ZetaMap;
 import com.dudu.payment.StripeManager;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +35,7 @@ public class ShoppingOrderManager {
 
     /**
      *
-     * @param userId
+     * @param userId who will be charged for the order
      * @param requestId
      * @param offerId
      * @throws Exception
@@ -45,13 +46,23 @@ public class ShoppingOrderManager {
         if (price <= 0)
             throw new IllegalArgumentException("invalid price of offer " + offerId);
 
-        // create an order
         long orderId;
+        // create an order
         try (Connection conn = source.getConnection()) {
-            String insert = "INSERT INTO ShoppingOrders(ShoppingRequestId, ShoppingOfferId, OrderState) VALUES (?,?,?)";
-            List<ZetaMap> zetaMaps = DBHelper.getHelper().execUpdateToZetaMaps(conn, insert, new String[] {"OrderId"}, requestId, offerId, ORDER_STATE_LIMBO);
+            StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingOrderCreate_Limbo");
+            sp.addParameter("ShoppingRequestId", requestId);
+            sp.addParameter("ShoppingOfferId", offerId);
 
-            orderId = zetaMaps.get(0).getLong("OrderId");
+            List<ZetaMap> zetaMaps = sp.execToZetaMaps();
+            if (zetaMaps.size() == 0)
+                throw new IllegalArgumentException("Failed to create an order: " + requestId + ", " + offerId);
+
+            ZetaMap zetaMap = zetaMaps.get(0);
+            int error = zetaMap.getInt("Error");
+            if (error != 0)
+                throw new IllegalArgumentException("Failed to create an order, with error code: " + error);
+
+            orderId = zetaMap.getLong("OrderId");
         }
 
         // pay it
@@ -90,24 +101,14 @@ public class ShoppingOrderManager {
      * @param end can be null
      * @return
      */
-    public List<ShoppingOrder> searchOrders(long userId, Date start, Date end) {
+    public List<ShoppingOrder> searchOrders(long userId, Date begin, Date end) {
         try (Connection conn = source.getConnection()) {
-            String sql = "SELECT * FROM ShoppingOffers WHERE UserId = ? ";
+            StoredProcedure sp = new StoredProcedure(conn, "sp_ShoppingOrderSearch");
+            sp.addParameter("UserId", userId);
+            sp.addParameter("Begin", begin);
+            sp.addParameter("End", end);
 
-            List<Object> params = new ArrayList<>();
-            params.add(userId);
-
-            if (start != null) {
-                sql += " AND CreatedAt >= ? ";
-                params.add(start);
-            }
-
-            if (end != null) {
-                sql += " AND CreatedAt <= ? ";
-                params.add(start);
-            }
-
-            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, params.toArray());
+            List<ZetaMap> zetaMaps = sp.execToZetaMaps();
 
             List<ShoppingOrder> orders = new ArrayList<>();
             for (ZetaMap zetaMap : zetaMaps)
