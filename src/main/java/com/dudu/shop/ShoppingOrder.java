@@ -14,6 +14,7 @@ public class ShoppingOrder {
     private Date offerCreatedAt;
     private Date createdAt;
     private String orderState;
+    private String shipmentTrackingNumber;
 
     public static ShoppingOrder from(ZetaMap zetaMap) {
         ShoppingOrder order = new ShoppingOrder();
@@ -29,6 +30,8 @@ public class ShoppingOrder {
 
         order.createdAt = zetaMap.getDate("CreatedAt");
         order.orderState = zetaMap.getString("OrderState");
+
+        order.shipmentTrackingNumber = zetaMap.getString("ShipmentTrackingNumber");
 
         return order;
     }
@@ -71,5 +74,9 @@ public class ShoppingOrder {
 
     public String getOrderState() {
         return orderState;
+    }
+
+    public String getShipmentTrackingNumber() {
+        return shipmentTrackingNumber;
     }
 }

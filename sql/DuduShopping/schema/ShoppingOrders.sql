@@ -13,4 +13,5 @@ CREATE TABLE ShoppingOrders(
   OfferCreatedAt DATETIME NOT NULL,
   CreatedAt DATETIME NOT NULL DEFAULT SYSDATETIME(),
   OrderState VARCHAR(5) NOT NULL,
+  ShipmentTrackingNumber VARCHAR(30) NULL,
 )

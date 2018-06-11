@@ -97,7 +97,7 @@ public class ShoppingOrderManager {
     /**
      *
      * @param userId
-     * @param start can be null
+     * @param begin can be null
      * @param end can be null
      * @return
      */
@@ -127,7 +127,28 @@ public class ShoppingOrderManager {
 
             int count = DBHelper.getHelper().execUpdate(conn, sql, ORDER_STATE_SHIPPED, orderId, ORDER_STATE_PAID);
             if (count != 1) {
-                String warning = "Failed to update ShoppingOrder OrderId=" + orderId + " to shipped";
+                String warning = "Failed to update ShoppingOrders OrderId=" + orderId + " to shipped";
+                logger.warn(warning);
+                throw new IllegalArgumentException(warning);
+            }
+
+            return getOrder(orderId);
+        }
+    }
+
+    /**
+     *
+     * @param orderId
+     * @param tracking
+     * @return
+     * @throws Exception
+     */
+    public ShoppingOrder updateTrackingNumber(long orderId, String tracking) throws Exception {
+        try (Connection conn = source.getConnection()) {
+            String sql = "UPDATE ShoppingOrders SET ShipmentTrackingNumber = ? WHERE OrderId = ? AND OrderState = ?";
+            int c = DBHelper.getHelper().execUpdate(conn, sql, tracking, orderId, ORDER_STATE_SHIPPED);
+            if (c != 1) {
+                String warning = "Failed to update tracking number";
                 logger.warn(warning);
                 throw new IllegalArgumentException(warning);
             }

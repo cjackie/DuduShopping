@@ -11,7 +11,6 @@ import javax.sql.DataSource;
 import java.util.List;
 
 public class ShoppingOrderManagerTest extends TestBase {
-    // TODO
     ShoppingOrderManager manager;
 
     @Before
@@ -52,6 +51,35 @@ public class ShoppingOrderManagerTest extends TestBase {
         long userId = 1;
         List<ShoppingOrder> orders = manager.searchOrders(userId, null, null);
         println(orders.size());
+    }
+
+    @Test
+    public void orderShipped() throws Exception {
+        Assume.assumeTrue(ready);
+
+        long orderId = 1;
+        ShoppingOrder order = manager.orderShipped(orderId);
+        println(order.getOrderState());
+    }
+
+    @Test
+    public void updateTrackingNumber() throws Exception {
+        Assume.assumeTrue(ready);
+
+        long orderId = 1;
+        String trackingNumber = "UPS123456789";
+
+        ShoppingOrder order = manager.updateTrackingNumber(orderId, trackingNumber);
+        println(order.getShipmentTrackingNumber());
+    }
+
+    @Test
+    public void orderDone() throws Exception {
+        Assume.assumeTrue(ready);
+
+        long orderId = 1;
+        ShoppingOrder order = manager.orderDone(orderId);
+        println(order.getOrderState());
     }
 
 }
