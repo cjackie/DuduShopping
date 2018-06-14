@@ -13,7 +13,7 @@ import java.util.*;
  * interact with the stripe
  * Created by Chaojie (Jack) Wang on 5/17/18.
  */
-/* package */ class StripeProxy {
+public class StripeProxy {
     private static final Logger logger = LogManager.getLogger(StripeProxy.class);
 
     static StripeProxy getProxy() {

@@ -9,3 +9,7 @@ out/
 
 # Mac
 .DS_Store
+
+# private api keys
+/conf/ApiKeys.conf
+/conf/StripeApiKey.conf

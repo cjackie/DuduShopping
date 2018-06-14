@@ -54,12 +54,19 @@ public class ZetaMap extends LinkedHashMap<String, Object> {
     }
 
     public long getLong(String col, long defaultVal) {
-        if (!containsKey(col) || !(get(col) instanceof Long)) {
+        if (!containsKey(col)) {
             logger.warn("column " + col + " of type " + Long.class.getName() + " not found.");
             return defaultVal;
         }
 
-        return (Long) get(col);
+        if (get(col) instanceof Long)
+            return (Long) get(col);
+        else if (get(col) instanceof BigDecimal)
+            return ((BigDecimal) get(col)).longValue();
+        else {
+            logger.warn("column " + col + " of type " + Long.class.getName() + " not found.");
+            return defaultVal;
+        }
     }
 
     public long getLong(String col) {

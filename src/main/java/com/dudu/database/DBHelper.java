@@ -122,9 +122,8 @@ public class DBHelper {
             List<ZetaMap> zetaMaps = new ArrayList<>();
             while (rs.next()) {
                 ZetaMap map = new ZetaMap();
-                for (String key : generatedKeys) {
-                    map.put(key, rs.getObject(key));
-                }
+                for (int i = 1; i <= generatedKeys.length; i++)
+                    map.put(generatedKeys[i-1], rs.getObject(i));
                 zetaMaps.add(map);
             }
 
