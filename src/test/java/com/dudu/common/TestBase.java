@@ -1,6 +1,7 @@
 package com.dudu.common;
 
 import com.dudu.database.DBManager;
+import org.junit.Before;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
