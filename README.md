@@ -15,8 +15,8 @@ Dudu Shopping is platform to provide human centric, customer friendly, and valua
 We want to disrupt the way we engage customers. Human interaction is the key part of
 building Dudu Shopping. We want invert the existing way of shopping, to provide a customer
 friendly experience. On Dudu Shopping, customer don't browser over hundred items to decide 
-what he wants. Customer describe to Dudu Shopping want he wants. Dudu Shopping is human centric.
-Dudu helpers, who registered with Dudu Shopping, provide best item to customers. 
+what he wants. The customer describes what he wants to Dudu Shopping. Dudu Shopping is human centric.
+Dudu helpers, who registered with Dudu Shopping, provides best item to customers. 
 All items selected by Dudu helpers are good and inexpensive. The customer can select the best and suitable one out of them.
 
 ### Get start
@@ -34,7 +34,7 @@ development has to do in other branches. It is recommended for new features to c
 - Write responsible, clean, and readable code.
 
 ### Documentation
-Document as much as possible for feature developers to pick up. Write javadoc and comments to indicate usage/intention when
+Document as much as possible for future developers to pick up. Write javadoc and comments to indicate usage/intention when
 needed. For higher level concept, write state diagrams and technical document, which must be in the wiki. 
 
 
