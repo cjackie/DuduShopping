@@ -1,6 +1,5 @@
 package com.dudu.net;
 
-import javax.print.DocFlavor;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -14,8 +13,10 @@ import java.util.List;
  * for both https and http
  */
 public class HttpRequest {
-    public static final String METHOD_POST = "POST";
-    public static final String METHOD_GET = "GET";
+    public static final String POST = "POST";
+    public static final String GET = "GET";
+
+    private final String USER_AGENT = "Mozilla/5.0";
 
     private String url;
     private String method;
@@ -35,7 +36,7 @@ public class HttpRequest {
 
     public HttpRequest(String schema, String host, String path) {
         this.url = schema + "://" + host + (host.charAt(host.length()-1) != '/' ? "/" : "") + path;
-        this.method = "GET";
+        this.method = GET;
         this.body = "";
         this.headers = new LinkedHashMap<>();
         this.queryParam = new LinkedHashMap<>();
@@ -78,12 +79,14 @@ public class HttpRequest {
             for (String key : headers.keySet())
                 httpConn.addRequestProperty(key, headers.get(key));
 
-            httpConn.setRequestProperty("Content-Length", Integer.toString(body.length()));
-
-            httpConn.setDoOutput(true);
-            try (OutputStream out = httpConn.getOutputStream()) {
-                out.write(body.getBytes("UTF8"));
-                out.flush();
+            httpConn.addRequestProperty("User-Agent", USER_AGENT);
+            if (body.length() != 0 ) {
+                httpConn.setRequestProperty("Content-Length", Integer.toString(body.length()));
+                httpConn.setDoOutput(true);
+                try (OutputStream out = httpConn.getOutputStream()) {
+                    out.write(body.getBytes("UTF8"));
+                    out.flush();
+                }
             }
 
             return new HttpResponse(httpConn);

@@ -18,7 +18,8 @@ public class HttpRequestTest extends TestBase {
         Assume.assumeTrue(ready);
 
         HttpRequest request = new HttpRequest("https://jsonplaceholder.typicode.com/posts");
-        request.method(HttpRequest.METHOD_GET);
+//        HttpRequest request = new HttpRequest("https://www.google.com");
+        request.method(HttpRequest.GET);
         HttpResponse response = request.doRequest();
         System.out.println(response.responseText());
     }
@@ -29,6 +30,7 @@ public class HttpRequestTest extends TestBase {
 
         HttpRequest request = new HttpRequest("https", "jsonplaceholder.typicode.com", "posts");
         request.addHeader("Content-Type", "application/json; charset=UTF-8");
+        request.method(HttpRequest.POST);
 
         JSONObject obj = new JSONObject();
         obj.put("title", "foo");

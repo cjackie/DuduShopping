@@ -25,8 +25,16 @@ public class HttpResponse {
     public String responseText(int maxSize) throws IOException{
         byte[] buffer = new byte[maxSize];
         try (InputStream in  = conn.getInputStream()) {
-            int len = in.read(buffer, 0, maxSize);
-            return new String(buffer, 0, len, StandardCharsets.UTF_8);
+            int sizeRead = 0;
+            while (sizeRead < maxSize) {
+                int read = in.read(buffer, sizeRead, maxSize - sizeRead);
+                if (read == -1)
+                    break;
+
+                sizeRead += read;
+            }
+
+            return new String(buffer, 0, sizeRead, StandardCharsets.UTF_8);
         }
     }
 }
