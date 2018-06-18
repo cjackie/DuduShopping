@@ -8,8 +8,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -118,8 +116,7 @@ public class UPSProxy implements ShippingTracker {
             return new LinkedHashMap<>(activiesMap);
         } catch (Exception ignored) { }
 
-        /** case 2 **/
-
+        // try package
         try {
             JSONObject activity = trackingResponse.getJSONObject("Shipment").getJSONObject("Package").getJSONObject("Activity");
             String city = activity.getJSONObject("ActivityLocation").getJSONObject("Address").getString("City");
