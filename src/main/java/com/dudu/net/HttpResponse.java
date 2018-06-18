@@ -17,6 +17,14 @@ public class HttpResponse {
         return conn.getResponseCode();
     }
 
+    public boolean ok() {
+        try {
+            return this.status() == 200;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
     public String responseText() throws IOException {
         final int MAX_SIZE = 1024*100;
         return responseText(MAX_SIZE);
