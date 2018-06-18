@@ -3,10 +3,10 @@ package com.dudu.shipping.fedex;
 import org.simpleframework.xml.Element;
 
 public class ClientDetail {
-    @Element(name = "AccountNumber")
+    @Element(name = Request.VERSION + ":AccountNumber")
     private String accountNumber;
 
-    @Element(name = "MeterNumber")
+    @Element(name = Request.VERSION + ":MeterNumber")
     private String meterNumber;
 
     public String getAccountNumber() {

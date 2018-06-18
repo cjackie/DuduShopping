@@ -2,10 +2,7 @@ package com.dudu.shipping;
 
 import com.dudu.net.HttpRequest;
 import com.dudu.net.HttpResponse;
-import com.dudu.shipping.fedex.TrackDetails;
-import com.dudu.shipping.fedex.TrackDetailsEvent;
-import com.dudu.shipping.fedex.TrackReply;
-import com.dudu.shipping.fedex.TrackRequest;
+import com.dudu.shipping.fedex.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.simpleframework.xml.Serializer;
@@ -46,7 +43,7 @@ public class FedexProxy implements ShippingTracker {
                 .addHeader("Accept", "text/html")
                 .addHeader("Content-Type", "text/xml");
 
-        TrackRequest content = TrackRequest.buildRequest(id, key, password, accountNumber, meterNumber);
+        Request content = TrackRequest.buildRequest(id, key, password, accountNumber, meterNumber);
 
         SortedMap<Date, ShippingEvent> shippingEvents = new TreeMap<>();
         try {

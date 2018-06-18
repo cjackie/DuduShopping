@@ -4,18 +4,18 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 @Root(name = "TrackRequest")
-public class TrackRequest {
+public class TrackRequest implements RequestBody, RequestBuilder {
 
-    @Element(name="PackageIdentifier")
+    @Element(name = Request.VERSION + ":PackageIdentifier")
     private PackageIdentifier packageIdentifier;
 
-    @Element(name = "SelectionDetail")
+    @Element(name = Request.VERSION + ":SelectionDetail")
     private SelectionDetail selectionDetail;
 
-    @Element(name = "WebAuthenticationCredential")
+    @Element(name = Request.VERSION + ":WebAuthenticationCredential")
     private WebAuthenticationCredential webAuthenticationCredential;
 
-    @Element(name = "ClientDetail")
+    @Element(name = Request.VERSION + ":ClientDetail")
     private ClientDetail clientDetail;
 
     public PackageIdentifier getPackageIdentifier() {
@@ -59,8 +59,8 @@ public class TrackRequest {
      * @param meterNumber
      * @return
      */
-    public static TrackRequest buildRequest(String trackingNumber, String key, String password, String accountNumber, String meterNumber) {
-        TrackRequest request = new TrackRequest();
+    public static Request buildRequest(String trackingNumber, String key, String password, String accountNumber, String meterNumber) {
+        TrackRequest trackRequest = new TrackRequest();
 
         PackageIdentifier identifier = new PackageIdentifier();
         identifier.setType(PackageIdentifier.TRACKING_NUMBER_OR_DOORTAG);
@@ -69,8 +69,8 @@ public class TrackRequest {
         selectionDetail.setProcessingOptions(SelectionDetail.PROCESSING_OPTIONS_INCLUDE_DETAILED_SCANS);
         selectionDetail.setTrackingNumberUniqueIdentifier(trackingNumber);
 
-        request.setPackageIdentifier(identifier);
-        request.setSelectionDetail(selectionDetail);
+        trackRequest.setPackageIdentifier(identifier);
+        trackRequest.setSelectionDetail(selectionDetail);
 
         WebAuthenticationCredential authenticationCredential = new WebAuthenticationCredential();
         UserCredential userCredential = new UserCredential();
@@ -78,14 +78,15 @@ public class TrackRequest {
         userCredential.setPassword(password);
         authenticationCredential.setUserCredential(userCredential);
 
-        request.setWebAuthenticationCredential(authenticationCredential);
+        trackRequest.setWebAuthenticationCredential(authenticationCredential);
 
         ClientDetail clientDetail = new ClientDetail();
         clientDetail.setAccountNumber(accountNumber);
         clientDetail.setMeterNumber(meterNumber);
 
-        request.setClientDetail(clientDetail);
+        trackRequest.setClientDetail(clientDetail);
 
-        return request;
+        return Request.buildRequest(trackRequest);
     }
+
 }

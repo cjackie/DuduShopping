@@ -3,10 +3,10 @@ package com.dudu.shipping.fedex;
 import org.simpleframework.xml.Element;
 
 public class UserCredential {
-    @Element(name = "Key")
+    @Element(name = Request.VERSION + ":Key")
     private String key;
 
-    @Element(name = "Password")
+    @Element(name = Request.VERSION + ":Password")
     private String password;
 
     public String getKey() {

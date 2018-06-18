@@ -43,7 +43,7 @@ public class FedexElementsTest {
 
     @Test
     public void buildTrackRequest() throws Exception {
-        TrackRequest request = TrackRequest.buildRequest("tracking number", "key", "password", "account number", "meter number");
+        Request request = TrackRequest.buildRequest("tracking number", "key", "password", "account number", "meter number");
         Serializer serializer = new Persister();
         serializer.write(request, new OutputStreamWriter(System.out));
     }

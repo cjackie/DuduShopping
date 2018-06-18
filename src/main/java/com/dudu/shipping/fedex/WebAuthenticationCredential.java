@@ -4,7 +4,7 @@ import org.simpleframework.xml.Element;
 
 public class WebAuthenticationCredential {
 
-    @Element(name = "UserCredential")
+    @Element(name = Request.VERSION + ":UserCredential")
     private UserCredential userCredential;
 
     public UserCredential getUserCredential() {
