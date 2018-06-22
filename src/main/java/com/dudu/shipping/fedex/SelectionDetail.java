@@ -5,8 +5,8 @@ import org.simpleframework.xml.Element;
 public class SelectionDetail {
     public static final String PROCESSING_OPTIONS_INCLUDE_DETAILED_SCANS = "INCLUDE_DETAILED_SCANS";
 
-    @Element(name = Request.VERSION + ":TrackingNumberUniqueIdentifier")
-    private String trackingNumberUniqueIdentifier;
+    @Element(name = Request.VERSION + ":PackageIdentifier")
+    private PackageIdentifier packageIdentifier;
 
     /**
      * Valid value is INCLUDE_DETAILED_SCANS.
@@ -16,19 +16,19 @@ public class SelectionDetail {
     @Element(name = Request.VERSION + ":ProcessingOptions")
     private String processingOptions;
 
-    public String getTrackingNumberUniqueIdentifier() {
-        return trackingNumberUniqueIdentifier;
-    }
-
-    public void setTrackingNumberUniqueIdentifier(String trackingNumberUniqueIdentifier) {
-        this.trackingNumberUniqueIdentifier = trackingNumberUniqueIdentifier;
-    }
-
     public String getProcessingOptions() {
         return processingOptions;
     }
 
     public void setProcessingOptions(String processingOptions) {
         this.processingOptions = processingOptions;
+    }
+
+    public PackageIdentifier getPackageIdentifier() {
+        return packageIdentifier;
+    }
+
+    public void setPackageIdentifier(PackageIdentifier packageIdentifier) {
+        this.packageIdentifier = packageIdentifier;
     }
 }

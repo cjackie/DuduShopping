@@ -15,21 +15,21 @@ public class FedexElementsTest {
 
         PackageIdentifier identifier = new PackageIdentifier();
         identifier.setType(PackageIdentifier.TRACKING_NUMBER_OR_DOORTAG);
+        identifier.setValue("1234");
 
         SelectionDetail selectionDetail = new SelectionDetail();
         selectionDetail.setProcessingOptions(SelectionDetail.PROCESSING_OPTIONS_INCLUDE_DETAILED_SCANS);
-        selectionDetail.setTrackingNumberUniqueIdentifier("1234");
+        selectionDetail.setPackageIdentifier(identifier);
 
-        request.setPackageIdentifier(identifier);
         request.setSelectionDetail(selectionDetail);
 
-        WebAuthenticationCredential authenticationCredential = new WebAuthenticationCredential();
+        WebAuthenticationDetail webAuthenticationDetail = new WebAuthenticationDetail();
         UserCredential userCredential = new UserCredential();
         userCredential.setKey("123");
         userCredential.setPassword("456");
-        authenticationCredential.setUserCredential(userCredential);
+        webAuthenticationDetail.setUserCredential(userCredential);
 
-        request.setWebAuthenticationCredential(authenticationCredential);
+        request.setWebAuthenticationDetail(webAuthenticationDetail);
 
         ClientDetail clientDetail = new ClientDetail();
         clientDetail.setAccountNumber("acount number");

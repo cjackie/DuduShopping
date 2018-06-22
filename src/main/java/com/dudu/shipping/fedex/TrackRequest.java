@@ -6,24 +6,25 @@ import org.simpleframework.xml.Root;
 @Root(name = "TrackRequest")
 public class TrackRequest implements RequestBody, RequestBuilder {
 
-    @Element(name = Request.VERSION + ":PackageIdentifier")
-    private PackageIdentifier packageIdentifier;
-
-    @Element(name = Request.VERSION + ":SelectionDetail")
-    private SelectionDetail selectionDetail;
-
-    @Element(name = Request.VERSION + ":WebAuthenticationCredential")
-    private WebAuthenticationCredential webAuthenticationCredential;
+    @Element(name = Request.VERSION + ":WebAuthenticationDetail")
+    private WebAuthenticationDetail webAuthenticationDetail;
 
     @Element(name = Request.VERSION + ":ClientDetail")
     private ClientDetail clientDetail;
 
-    public PackageIdentifier getPackageIdentifier() {
-        return packageIdentifier;
-    }
+    @Element(name = Request.VERSION + ":Version")
+    private Version version;
 
-    public void setPackageIdentifier(PackageIdentifier packageIdentifier) {
-        this.packageIdentifier = packageIdentifier;
+    @Element(name = Request.VERSION + ":SelectionDetail")
+    private SelectionDetail selectionDetail;
+
+    public TrackRequest() {
+        Version version = new Version();
+        version.setServiceId("trck");
+        version.setMajor("14");
+        version.setIntermediate("0");
+        version.setMinor("0");
+        this.version = version;
     }
 
     public SelectionDetail getSelectionDetail() {
@@ -34,12 +35,12 @@ public class TrackRequest implements RequestBody, RequestBuilder {
         this.selectionDetail = selectionDetail;
     }
 
-    public WebAuthenticationCredential getWebAuthenticationCredential() {
-        return webAuthenticationCredential;
+    public WebAuthenticationDetail getWebAuthenticationDetail() {
+        return webAuthenticationDetail;
     }
 
-    public void setWebAuthenticationCredential(WebAuthenticationCredential webAuthenticationCredential) {
-        this.webAuthenticationCredential = webAuthenticationCredential;
+    public void setWebAuthenticationDetail(WebAuthenticationDetail webAuthenticationDetail) {
+        this.webAuthenticationDetail = webAuthenticationDetail;
     }
 
     public ClientDetail getClientDetail() {
@@ -48,6 +49,14 @@ public class TrackRequest implements RequestBody, RequestBuilder {
 
     public void setClientDetail(ClientDetail clientDetail) {
         this.clientDetail = clientDetail;
+    }
+
+    public Version getVersion() {
+        return version;
+    }
+
+    public void setVersion(Version version) {
+        this.version = version;
     }
 
     /**
@@ -64,21 +73,22 @@ public class TrackRequest implements RequestBody, RequestBuilder {
 
         PackageIdentifier identifier = new PackageIdentifier();
         identifier.setType(PackageIdentifier.TRACKING_NUMBER_OR_DOORTAG);
+        identifier.setValue(trackingNumber);
 
         SelectionDetail selectionDetail = new SelectionDetail();
         selectionDetail.setProcessingOptions(SelectionDetail.PROCESSING_OPTIONS_INCLUDE_DETAILED_SCANS);
-        selectionDetail.setTrackingNumberUniqueIdentifier(trackingNumber);
+        selectionDetail.setPackageIdentifier(identifier);
 
-        trackRequest.setPackageIdentifier(identifier);
         trackRequest.setSelectionDetail(selectionDetail);
 
-        WebAuthenticationCredential authenticationCredential = new WebAuthenticationCredential();
+        WebAuthenticationDetail webAuthenticationDetail = new WebAuthenticationDetail();
+
         UserCredential userCredential = new UserCredential();
         userCredential.setKey(key);
         userCredential.setPassword(password);
-        authenticationCredential.setUserCredential(userCredential);
+        webAuthenticationDetail.setUserCredential(userCredential);
 
-        trackRequest.setWebAuthenticationCredential(authenticationCredential);
+        trackRequest.setWebAuthenticationDetail(webAuthenticationDetail);
 
         ClientDetail clientDetail = new ClientDetail();
         clientDetail.setAccountNumber(accountNumber);

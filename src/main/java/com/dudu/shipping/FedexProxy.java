@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -40,7 +41,7 @@ public class FedexProxy implements ShippingTracker {
         HttpRequest httpRequest = new HttpRequest(url);
 
         httpRequest.method(HttpRequest.POST)
-                .addHeader("Accept", "text/html")
+                .addHeader("Accept", "text/html, */*")
                 .addHeader("Content-Type", "text/xml");
 
         Request content = TrackRequest.buildRequest(id, key, password, accountNumber, meterNumber);
@@ -50,14 +51,16 @@ public class FedexProxy implements ShippingTracker {
             Serializer serializer = new Persister();
 
             // making request
+            PrintWriter debug = new PrintWriter(System.out);
             StringWriter writer = new StringWriter();
             serializer.write(content, writer);
+            serializer.write(content, debug);
             httpRequest.body(writer.getBuffer().toString());
 
             HttpResponse response = httpRequest.doRequest();
 
-//            if (response.status() != 200)
-//                throw new IllegalStateException("Expecting status = 200");
+            if (response.status() != 200)
+                throw new IllegalStateException("Expecting status = 200");
 
             // response
             String xml = response.responseText();

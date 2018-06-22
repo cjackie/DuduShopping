@@ -2,7 +2,7 @@ package com.dudu.shipping.fedex;
 
 import org.simpleframework.xml.Element;
 
-public class WebAuthenticationCredential {
+public class WebAuthenticationDetail {
 
     @Element(name = Request.VERSION + ":UserCredential")
     private UserCredential userCredential;

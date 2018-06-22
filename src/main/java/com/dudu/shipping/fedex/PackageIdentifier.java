@@ -8,6 +8,17 @@ public class PackageIdentifier {
     @Element(name = Request.VERSION + ":Type")
     private String type;
 
+    @Element(name = Request.VERSION + ":Value")
+    private String value;
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
     public String getType() {
         return type;
     }
