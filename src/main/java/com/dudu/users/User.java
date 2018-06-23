@@ -2,12 +2,13 @@ package com.dudu.users;
 
 import com.dudu.database.ZetaMap;
 
+import java.security.Principal;
 import java.util.Date;
 
 /**
  * Created by chaojiewang on 5/10/18.
  */
-public class User {
+public class User implements Principal {
     private long userId;
     private String login;
     private String password;
@@ -94,4 +95,8 @@ public class User {
         this.address = address;
     }
 
+    @Override
+    public String getName() {
+        return getLogin() + "." + role;
+    }
 }
