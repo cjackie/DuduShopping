@@ -23,7 +23,7 @@ public class SQLTokenManager implements TokenManager, Runnable  {
     private static DataSource source;
     private static SQLTokenManager manager = new SQLTokenManager();
     private SQLTokenManager() {
-        BackgroundService.getInstance().scheduleAtFixedRate(this, 0, 5000, TimeUnit.MILLISECONDS);
+        BackgroundService.getInstance().scheduleAtFixedRate(this, 0, 1, TimeUnit.MINUTES);
     }
 
     public static void init(DataSource source) throws Exception {
@@ -38,55 +38,28 @@ public class SQLTokenManager implements TokenManager, Runnable  {
     private ConcurrentHashMap<String, Token> cachedTokens = new ConcurrentHashMap<>();
 
     @Override
-    public boolean isValidToken(String clientId, String secret) throws Exception {
-
-        // check cache
-        Token token = cachedTokens.get(tokenKey(clientId, secret));
-
-        if (token != null)
-            return isValidToken(token);
-
-        // no found, check on database
-        String sql = "SELECT * FROM Tokens WHERE UserId = ? AND Token = ?";
+    public long checkToken(String token) throws Exception {
         try (Connection conn = source.getConnection()) {
-            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, clientId, secret);
-            if (zetaMaps.size() == 0)
-                return false;
+            String select = "SELECT * FROM Tokens WHERE Token = ?";
+            List<ZetaMap> zmaps = DBHelper.getHelper().execToZetaMaps(conn, select, token);
+            if (zmaps.size() == 0)
+                throw new IllegalArgumentException("Unknown token: Token=" + token);
 
-            token = Token.from(zetaMaps.get(0));
-            return isValidToken(token);
-        }
-    }
+            Token tokenObj = Token.from(zmaps.get(0));
+            if (!isValidToken(tokenObj))
+                throw new IllegalArgumentException("Token is not valid: token Id=" + tokenObj.getId());
 
-    @Override
-    public List<Token> getTokens(String clientId) throws Exception {
-        if (clientId == null)
-            throw new IllegalArgumentException("clientId can't be null");
-
-        try (Connection conn = source.getConnection()) {
-            String sql = "SELECT * FROM Tokens WHERE IsValid = 1 AND UserId = ? AND DATEADD(SECOND, ExpiresIn, IssuedAt) > SYSDATETIME() ORDER BY IssuedAt DESC";
-            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, clientId);
-
-            if (zetaMaps.size() == 0) {
-                logger.warn("no token available");
-                return new ArrayList<>();
-            }
-
-            List<Token> tokens = new ArrayList<>();
-            for (ZetaMap zmap : zetaMaps)
-                tokens.add(Token.from(zmap));
-
-            return tokens;
+            return tokenObj.getUserId();
         }
     }
 
     /**
      *
-     * @param clientId
+     * @param userId
      * @return
      */
     @Override
-    public Token createToken(String clientId) throws Exception {
+    public Token createToken(long userId) throws Exception {
         try (Connection conn = source.getConnection()) {
             Random random = new Random();
             byte bytes[] = new byte[60];
@@ -98,39 +71,41 @@ public class SQLTokenManager implements TokenManager, Runnable  {
             int expiresIn = 60*60; // two hours
 
             UsersManager usersManager = new UsersManager(source);
-            User user = usersManager.getUser(Long.parseLong(clientId));
+            User user = usersManager.getUser(userId);
             String scope = user.getScope();
 
             String sql = "INSERT INTO Tokens (UserId, Token, RefreshToken, ExpiresIn, IssuedAt, Scope) VALUES (?,?,?,?,?,?)";
-            List<ZetaMap> zetaMaps = DBHelper.getHelper().execUpdateToZetaMaps(conn, sql, new String[]{"Id"}, clientId, token, refreshToken, expiresIn, issuedAt, scope);
+            List<ZetaMap> zetaMaps = DBHelper.getHelper().execUpdateToZetaMaps(conn, sql, new String[]{"Id"}, userId, token, refreshToken, expiresIn, issuedAt, scope);
 
             BigDecimal id = (BigDecimal) zetaMaps.get(0).getObject("Id");
             sql = "SELECT * FROM Tokens WHERE Id = ?";
             zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, id.toBigIntegerExact().longValue());
             Token tokenObj = Token.from(zetaMaps.get(0));
             // cache
-            cachedTokens.put(tokenKey(clientId, tokenObj.getToken()), tokenObj);
+            cachedTokens.put(tokenObj.getToken(), tokenObj);
 
             return tokenObj;
         }
     }
 
     @Override
-    public Token refreshToken(String clientId, String refreshToken) throws Exception {
+    public Token refreshToken(String refreshToken) throws Exception {
         try (Connection conn = source.getConnection()) {
-            String sql = "SELECT * FROM Tokens WHERE UserId = ? AND RefreshToken = ? AND IsValid = 1";
-            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, clientId, refreshToken);
+            String sql = "SELECT * FROM Tokens WHERE RefreshToken = ? AND IsValid = 1";
+            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, refreshToken);
             if (zetaMaps.size() == 0)
-                throw new IllegalArgumentException("refresh token for client not found: " + clientId);
+                throw new IllegalArgumentException("refresh token for client not found: RefreshToken=" + refreshToken);
 
             Token oldToken = Token.from(zetaMaps.get(0));
             // check on the refresh token
             Date issuedAt = oldToken.getIssuedAt();
+
+            // check expiration time
             if (issuedAt.toInstant().plusSeconds(oldToken.getExpiresIn()*2).compareTo(Instant.now()) <= 0)
                 throw new IllegalArgumentException("refresh token is expired");
 
-            // new token
-            return createToken(clientId);
+            // issue new token
+            return createToken(oldToken.getUserId());
         }
     }
 
@@ -139,7 +114,7 @@ public class SQLTokenManager implements TokenManager, Runnable  {
             return;
 
         try (Connection conn = source.getConnection()) {
-            int ret = DBHelper.getHelper().execUpdate(conn, "UPDATE Tokens SET IsValid = 0 WHERE Token = ? AND UserId", token.getToken(), token.getUserId());
+            int ret = DBHelper.getHelper().execUpdate(conn, "UPDATE Tokens SET IsValid = 0 WHERE Token = ?", token.getToken());
             if (ret != 1)
                 throw new IllegalArgumentException("Failed to invalidate token " + token);
         }
@@ -169,9 +144,5 @@ public class SQLTokenManager implements TokenManager, Runnable  {
             return expireAt.compareTo(Instant.now()) > 0;
         } else
             return false;
-    }
-
-    private String tokenKey(String clientId, String secret) {
-        return clientId + ":" + secret;
     }
 }

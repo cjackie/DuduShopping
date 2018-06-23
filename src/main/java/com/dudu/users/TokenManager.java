@@ -1,13 +1,17 @@
 package com.dudu.users;
 
-import java.util.List;
-
 /**
  * Created by chaojiewang on 4/29/18.
  */
 public interface TokenManager {
-    boolean isValidToken(String clientId, String secret) throws Exception;
-    List<Token> getTokens(String clientId) throws Exception;
-    Token createToken(String clientId) throws Exception;
-    Token refreshToken(String clientId, String refreshToken) throws Exception;
+    /**
+     * check if the token is valid. if so, return the UserId
+     * @param token
+     * @return clientId
+     * @throws Exception token is invalid
+     */
+    long checkToken(String token) throws Exception;
+
+    Token createToken(long userId) throws Exception;
+    Token refreshToken(String refreshToken) throws Exception;
 }
