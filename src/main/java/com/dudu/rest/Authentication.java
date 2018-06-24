@@ -2,17 +2,13 @@ package com.dudu.rest;
 
 
 import com.dudu.database.DBManager;
-import com.dudu.rest.exceptions.UnauthorizationException;
 import com.dudu.users.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -37,13 +33,13 @@ public class Authentication {
      * @param request
      * @param role
      * @return
-     * @throws UnauthorizationException
+     * @throws NotAuthorizedException
      */
-    private TokenResponse authenticate(AuthenticationRequest request, char role) throws UnauthorizationException {
+    private TokenResponse authenticate(AuthenticationRequest request, char role) throws NotAuthorizedException {
         DataSource source = DBManager.getManager().getDataSource(DBManager.DATABASE_DUDU_SHOPPING);
 
         if (request.getLogin() == null || request.getPassword() == null)
-            throw new UnauthorizationException();
+            throw new BadRequestException();
 
 
         User user;
@@ -55,7 +51,7 @@ public class Authentication {
 
         } catch (Exception e) {
             logger.warn("Failed to logging user: " + request.getLogin(), e);
-            throw new UnauthorizationException();
+            throw new NotAuthorizedException("Failed to login");
         }
 
         // obtain token
@@ -72,7 +68,7 @@ public class Authentication {
             return tokenResponse;
         } catch (Exception e) {
             logger.error("Failed to create a token for " + request.getLogin());
-            throw new UnauthorizationException();
+            throw new NotAuthorizedException("Failed to create a token");
         }
     }
 

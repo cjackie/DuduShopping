@@ -1,15 +1,14 @@
 package com.dudu.rest;
 
 import com.dudu.database.DBManager;
-import com.dudu.rest.exceptions.UnauthorizationException;
-import com.dudu.users.SQLTokenManager;
-import com.dudu.users.TokenManager;
-import com.dudu.users.User;
-import com.dudu.users.UsersManager;
+import com.dudu.users.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Priority;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -38,33 +37,39 @@ public class SecurityProvider implements ReaderInterceptor, ContainerRequestFilt
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         logger.debug("filter 1");
+
         String bear = requestContext.getHeaders().getFirst("Authorization");
-
         int pos = bear.indexOf(' ');
-
         if (pos == -1)
-            throw new UnauthorizationException();
+            throw new BadRequestException();
 
         String type = bear.substring(0, pos).trim();
         String token = bear.substring(pos+1).trim();
 
         if (!type.equals(AUTH_TYPE))
-            throw new UnauthorizationException();
+            throw new BadRequestException();
 
+        User user;
         try {
             long userId = tokenManager.checkToken(token);
 
             // It is valid token. get user
             UsersManager usersManager = new UsersManager(DBManager.getManager().getDataSource(DBManager.DATABASE_DUDU_SHOPPING));
-            User user = usersManager.getUser(userId);
-
-            // set context
-            DuduSecurityContext context = new DuduSecurityContext(user);
-            requestContext.setSecurityContext(context);
+            user = usersManager.getUser(userId);
         } catch (Exception e) {
             logger.warn("Invalid token:", e);
-            throw new UnauthorizationException();
+            throw new NotAuthorizedException("Invalid token");
         }
+
+        // check on scope
+        String apiEndpoint = requestContext.getUriInfo().getAbsolutePath().getPath();
+        String method = requestContext.getMethod();
+        if (!ApiEndpointChecker.getInstance().check(apiEndpoint, method, user.getScopes()))
+            throw new ForbiddenException();
+
+        // set context
+        DuduSecurityContext context = new DuduSecurityContext(user);
+        requestContext.setSecurityContext(context);
     }
 
     @Override
