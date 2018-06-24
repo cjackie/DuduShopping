@@ -1,7 +1,6 @@
 package com.dudu.common;
 
 import com.dudu.database.DBManager;
-import org.junit.Before;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -14,6 +13,8 @@ public class TestBase {
 
     protected boolean dbReady;
     protected boolean ready;
+    protected Properties properties;
+
     public void setup() {
         try {
             String conf = System.getenv("DB_CONF");
@@ -21,7 +22,7 @@ public class TestBase {
                 conf = "./conf/db.conf";
 
             try (InputStream in = new FileInputStream(conf)) {
-                Properties properties = new Properties();
+                properties = new Properties();
                 properties.load(in);
 
                 DBManager.init(properties);
