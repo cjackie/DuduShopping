@@ -6,7 +6,7 @@ CREATE TABLE Tokens (
   RefreshToken VARCHAR(80) NOT NULL UNIQUE,
   IssuedAt DATETIME NOT NULL,
   ExpiresIn INT NOT NULL, -- seconds, usually 3600
-  Scope VARCHAR(100) NULL, -- comma seperated values
+  Scopes VARCHAR(100) NULL, -- comma seperated values
   IsValid BIT NOT NULL DEFAULT 1
 )
 

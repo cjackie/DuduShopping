@@ -11,7 +11,6 @@ import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -72,7 +71,7 @@ public class SQLTokenManager implements TokenManager, Runnable  {
 
             UsersManager usersManager = new UsersManager(source);
             User user = usersManager.getUser(userId);
-            String scope = user.getScope();
+            String scope = user.getRawScopes();
 
             String sql = "INSERT INTO Tokens (UserId, Token, RefreshToken, ExpiresIn, IssuedAt, Scope) VALUES (?,?,?,?,?,?)";
             List<ZetaMap> zetaMaps = DBHelper.getHelper().execUpdateToZetaMaps(conn, sql, new String[]{"Id"}, userId, token, refreshToken, expiresIn, issuedAt, scope);
