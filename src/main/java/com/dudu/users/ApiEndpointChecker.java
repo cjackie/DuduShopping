@@ -51,7 +51,7 @@ public class ApiEndpointChecker {
             throw new IllegalStateException("ApiEndpointChecker is not configured");
 
         for (String scope : scopes) {
-            if (apiEndpoints.contains(key(apiEndpoint, method, scope)))
+            if (apiEndpoints.contains(key(method, apiEndpoint, scope)))
                 return true;
         }
         return false;

@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
@@ -23,6 +24,13 @@ public class Ping {
     @GET
     public String ping() {
         logger.info("hello");
+        return "ok";
+    }
+
+    @POST
+    @Path("/post_ping")
+    public String postPing() {
+        logger.info("hello from POST");
         return "ok";
     }
 

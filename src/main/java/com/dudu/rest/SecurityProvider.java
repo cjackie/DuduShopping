@@ -36,9 +36,13 @@ public class SecurityProvider implements ReaderInterceptor, ContainerRequestFilt
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-        logger.debug("filter 1");
+        logger.debug("security screening");
 
         String bear = requestContext.getHeaders().getFirst("Authorization");
+        logger.debug(bear);
+        if (bear == null)
+            throw new BadRequestException();
+
         int pos = bear.indexOf(' ');
         if (pos == -1)
             throw new BadRequestException();
@@ -63,6 +67,19 @@ public class SecurityProvider implements ReaderInterceptor, ContainerRequestFilt
 
         // check on scope
         String apiEndpoint = requestContext.getUriInfo().getAbsolutePath().getPath();
+
+        // an example of apiEndpont: /dudu_shopping/rest/auth/refreshToken
+        // FIXME a better way to handle this....
+        String[] path = apiEndpoint.split("/");
+        if (path.length <= 3)
+            throw new ForbiddenException();
+
+        apiEndpoint = "";
+        for (int i = 3; i < path.length; i++)
+            apiEndpoint += "/" + path[i];
+
+        logger.debug(apiEndpoint);
+
         String method = requestContext.getMethod();
         if (!ApiEndpointChecker.getInstance().check(apiEndpoint, method, user.getScopes()))
             throw new ForbiddenException();

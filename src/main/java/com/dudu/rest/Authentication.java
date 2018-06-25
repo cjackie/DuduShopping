@@ -12,6 +12,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+
 @Path("/auth")
 public class Authentication {
     private static final Logger logger = LogManager.getLogger(Authentication.class);
@@ -20,11 +21,13 @@ public class Authentication {
      *
      * @param request
      * @return
-     */
+     **/
+    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/authenticateCustomer")
     public TokenResponse authenticateCustomer(@Context HttpServletResponse response, AuthenticationRequest request) throws Exception {
+        logger.debug("authenticateCustomer");
         return authenticate(request, UsersManager.USER_ROLE_CUSTOMER);
     }
 
@@ -45,7 +48,7 @@ public class Authentication {
         User user;
         try {
             UsersManager usersManager = new UsersManager(source);
-            user = usersManager.login(request.getLogin(), request.getPassword(), UsersManager.USER_ROLE_CUSTOMER);
+            user = usersManager.login(request.getLogin(), request.getPassword(), role);
             if (user == null)
                 throw new IllegalArgumentException();
 
@@ -78,9 +81,10 @@ public class Authentication {
      * @return
      * @throws Exception
      */
+    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/authenticateCustomer")
+    @Path("/refreshToken")
     @Secure
     public TokenResponse refreshToken(RefreshTokenRequest request) throws Exception {
         if (request.getRefreshToken() == null) {
