@@ -15,6 +15,7 @@ import java.util.Properties;
  * Created by chaojiewang on 7/1/17.
  */
 public class DBManager {
+    public static final String DATABASE_DUDU_SHOPPING = "DuduShopping";
     private static Logger logger = LogManager.getLogger(DBManager.class);
 
     private static DBManager ourInstance = new DBManager();
@@ -59,6 +60,9 @@ public class DBManager {
             HikariDataSource source = new HikariDataSource(config);
             dataSources.put(dbName, source);
         }
+
+        if (dataSources.get(DATABASE_DUDU_SHOPPING) == null)
+            throw new IllegalArgumentException("Missing dudu shopping database");
     }
 
     public DataSource getDataSource(String dbName) {

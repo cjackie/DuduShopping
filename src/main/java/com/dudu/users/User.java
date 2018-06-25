@@ -2,17 +2,21 @@ package com.dudu.users;
 
 import com.dudu.database.ZetaMap;
 
+import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by chaojiewang on 5/10/18.
  */
-public class User {
+public class User implements Principal {
     private long userId;
     private String login;
     private String password;
     private char role;
-    private String scope;
+    private String rawScopes;
+    private List<String> scopes;
     private Date createdOn;
     private Date lastLogin;
     private String address;
@@ -23,7 +27,15 @@ public class User {
         user.setLogin(zetaMap.getString("Login"));
         user.setPassword(zetaMap.getString("Password"));
         user.setRole(zetaMap.getChar("Role"));
-        user.setScope(zetaMap.getString("Scope"));
+
+        String rawScopes = zetaMap.getString("Scopes");
+        user.setRawScopes(rawScopes);
+
+        List<String> scopes = new ArrayList<>();
+        for (String scope : rawScopes.split(","))
+            scopes.add(scope.trim());
+        user.setScopes(scopes);
+
         user.setCreatedOn(zetaMap.getDate("CreatedOn"));
         user.setLastLogin(zetaMap.getDate("LastLogin"));
         user.setAddress(zetaMap.getString("Address"));
@@ -44,10 +56,6 @@ public class User {
 
     public char getRole() {
         return role;
-    }
-
-    public String getScope() {
-        return scope;
     }
 
     public Date getCreatedOn() {
@@ -78,10 +86,6 @@ public class User {
         this.role = role;
     }
 
-    protected void setScope(String scope) {
-        this.scope = scope;
-    }
-
     protected void setCreatedOn(Date createdOn) {
         this.createdOn = createdOn;
     }
@@ -94,4 +98,24 @@ public class User {
         this.address = address;
     }
 
+    public List<String> getScopes() {
+        return scopes;
+    }
+
+    public void setScopes(List<String> scopes) {
+        this.scopes = scopes;
+    }
+
+    public String getRawScopes() {
+        return rawScopes;
+    }
+
+    public void setRawScopes(String rawScopes) {
+        this.rawScopes = rawScopes;
+    }
+
+    @Override
+    public String getName() {
+        return getLogin() + "." + role;
+    }
 }

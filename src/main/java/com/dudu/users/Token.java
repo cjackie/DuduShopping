@@ -14,7 +14,7 @@ public class Token {
     private String token;
     private String refreshToken;
     private int expiresIn;
-    private String userId;
+    private long userId;
     private List<String> scope;
     private long id;
     private Date issuedAt;
@@ -22,9 +22,9 @@ public class Token {
     public static Token from(ZetaMap zmap) {
         Token token = new Token();
         token.token = zmap.getString("Token");
-        token.refreshToken = zmap.getString("refreshToken");
+        token.refreshToken = zmap.getString("RefreshToken");
         token.expiresIn = zmap.getInt("ExpiresIn");
-        token.userId = zmap.getString("UserId");
+        token.userId = zmap.getLong("UserId");
         String scopes = zmap.getString("Scope");
         token.scope = new ArrayList<>();
         Collections.addAll(token.scope, scopes.split(","));
@@ -35,6 +35,11 @@ public class Token {
     }
 
     /////////////////////////////////
+
+    /**
+     * prefix.secret.suffix
+     * @return
+     */
     public String getToken() {
         return token;
     }
@@ -59,7 +64,7 @@ public class Token {
         return issuedAt;
     }
 
-    public String getUserId() {
+    public long getUserId() {
         return userId;
     }
 }

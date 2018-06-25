@@ -36,38 +36,32 @@ public class SQLTokenManagerTest extends TestBase {
     @Test
     public void createToken() throws Exception {
         Assume.assumeTrue(ready);
-        Token token = SQLTokenManager.getManager().createToken("1");
+        Token token = SQLTokenManager.getManager().createToken(1);
 
         println("Id=" + token.getId());
         println("UserId=" + token.getUserId());
         println("Token=" + token.getToken());
+        println("RefreshToken=" + token.getRefreshToken());
     }
 
     @Test
-    public void getTokens() throws Exception {
+    public void checkToken() throws Exception {
         Assume.assumeTrue(ready);
-        List<Token> tokens = tokenManager.getTokens("1");
-        println(tokens.size());
+
+        String token = "Er3c4vEwq7iU5qAAb5RD0KVEDJjrwi3r8+BmMXsh9dtDGXcET+KIjdxbbHQ246MN/UDOsYc/dK9J97hu";
+        long userId = SQLTokenManager.getManager().checkToken(token);
+
+        println("UserId=" + userId);
     }
 
     @Test
     public void refreshToken() throws Exception {
         Assume.assumeTrue(ready);
-        String refreshToken = "8xmTIRb8/Cfv60lMASnphFrE0mO2S2Y0L98wRsS2CjRmpQ4UNBnkTRRBW6mZRmXec6/RblXxqV2DkY/N";
-        String userId = "1";
-        Token token = tokenManager.refreshToken(userId, refreshToken);
+        String refreshToken = "euvEchSi7TN4Pzzd6TMkUfUD8DrOTPPhw+Jwwg8DRWsKMSXQjQ6hAUddBTvs4bX9+f4suhyi23HqIVOW";
+        Token token = tokenManager.refreshToken(refreshToken);
         println("Id=" + token.getId());
         println("UserId=" + token.getUserId());
         println("Token=" + token.getToken());
-    }
-
-    @Test
-    public void isValidToken() throws Exception {
-        Assume.assumeTrue(ready);
-        String userId = "1";
-        String client = "y6nScPrZMEvbHS3HssTFU7iwMjVO+6fLC/owqXb4plykDaigvxWb7//OmXXMz2JowY9C68ES6Yq4/s45";
-        boolean valid = tokenManager.isValidToken(userId, client);
-        println(valid);
     }
 
 }
