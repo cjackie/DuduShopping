@@ -28,7 +28,7 @@ public class ApiEndpointChecker {
                 String endpoint = zmap.getString("Endpoint");
                 String method = zmap.getString("Method");
                 String scope = zmap.getString("Scope");
-                apiEndpoints.add(key(method, endpoint, scope));
+                apiEndpoints.add(key(endpoint, method, scope));
             }
         }
     }
