@@ -5,6 +5,7 @@ import com.dudu.database.ZetaMap;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,12 +28,12 @@ public class ApiEndpointChecker {
                 String endpoint = zmap.getString("Endpoint");
                 String method = zmap.getString("Method");
                 String scope = zmap.getString("Scope");
-                apiEndpoints.add(key(method, endpoint, scope));
+                apiEndpoints.add(key(endpoint, method, scope));
             }
         }
     }
 
-    public static String key(String method, String endpoint, String scope) {
+    private static String key(String endpoint, String method,  String scope) {
         return method + ";" + endpoint + ";" + scope;
     }
 
@@ -40,20 +41,22 @@ public class ApiEndpointChecker {
 
 
     public boolean check(String apiEndpoint, String method, String scope) {
-        if (apiEndpoints == null)
-            throw new IllegalStateException("ApiEndpointChecker is not configured");
-
-        return apiEndpoints.contains(key(apiEndpoint, method, scope));
+        return check(apiEndpoint, method, Arrays.asList(scope));
     }
 
     public boolean check(String apiEndpoint, String method, List<String> scopes) {
         if (apiEndpoints == null)
             throw new IllegalStateException("ApiEndpointChecker is not configured");
 
+        // is this endpoints open?
+        if (apiEndpoints.contains(key(apiEndpoint, method, "")))
+            return true;
+
         for (String scope : scopes) {
-            if (apiEndpoints.contains(key(method, apiEndpoint, scope)))
+            if (apiEndpoints.contains(key(apiEndpoint, method, scope)))
                 return true;
         }
+
         return false;
     }
 }
