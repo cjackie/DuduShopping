@@ -12,11 +12,9 @@ import org.apache.logging.log4j.Logger;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 /**
- * TODO implement cache to improve read performance.
+ *
  * Created by chaojiewang on 5/10/18.
  */
 public class UsersManager {
@@ -41,16 +39,14 @@ public class UsersManager {
      *
      * @param login
      * @param password
-     * @param role
      * @return
      * @throws Exception
      */
-    public User login(String login, String password, char role) throws Exception {
+    public User login(String login, String password) throws Exception {
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_UserLogin");
             sp.addParameter("Login", login);
             sp.addParameter("Password", saltedHash(password));
-            sp.addParameter("Role", role);
             List<ZetaMap> zmaps = sp.execToZetaMaps();
             if (zmaps.size() == 0)
                 throw new IllegalArgumentException("Failed to login: " + login);
@@ -59,7 +55,7 @@ public class UsersManager {
             if (error != 0)
                 throw new IllegalArgumentException("Failed to login: " + login + ". Error=" + error);
 
-            return getUser(login, password, role);
+            return getUser(login, password);
         }
     }
 
@@ -67,13 +63,12 @@ public class UsersManager {
      *
      * @param login
      * @param password plain password
-     * @param role
      * @return
      */
-    public User getUser(String login, String password, char role) throws Exception {
+    public User getUser(String login, String password) throws Exception {
         try (Connection conn = source.getConnection()) {
-            String sql = "SELECT * FROM Users WHERE Login = ? AND password = ? AND role = ?";
-            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, login, saltedHash(password), role);
+            String sql = "SELECT * FROM Users WHERE Login = ? AND password = ?";
+            List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, sql, login, saltedHash(password));
             return User.from(zetaMaps.get(0));
         }
     }
@@ -104,18 +99,18 @@ public class UsersManager {
      * @param login
      * @param password plain password
      * @param role
-     * @param scope
+     * @param scopes
      * @param address
      * @return
      * @throws Exception
      */
-    public User createUser(String login, String password, char role, String scope, String address) throws Exception {
+    public User createUser(String login, String password, char role, String scopes, String address) throws Exception {
         try (Connection conn = source.getConnection()) {
             StoredProcedure sp = new StoredProcedure(conn, "sp_CreateUser");
             sp.addParameter("Login", login);
             sp.addParameter("Password", saltedHash(password));
             sp.addParameter("Role", role);
-            sp.addParameter("Scope", scope);
+            sp.addParameter("Scopes", scopes);
             sp.addParameter("Address", address != null ? address : "");
             List<ZetaMap> zmaps = sp.execToZetaMaps();
             if (zmaps.size() == 0)

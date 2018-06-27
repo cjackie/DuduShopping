@@ -2,7 +2,7 @@ ALTER PROCEDURE sp_CreateUser (
   @Login VARCHAR(20),
   @Password VARCHAR(100),
   @Role CHAR(1),
-  @Scope VARCHAR(50),
+  @Scopes VARCHAR(100),
   @Address VARCHAR(100)
 ) AS
 
@@ -12,7 +12,7 @@ ALTER PROCEDURE sp_CreateUser (
   SET NOCOUNT ON
 
   -- check on arguments
-  IF @Role NOT IN ('C', 'S') OR @Scope IS NULL BEGIN
+  IF @Role NOT IN ('C', 'S') OR @Scopes IS NULL BEGIN
     SET @Error = 5
     GOTO ExitProc
   END
@@ -23,7 +23,7 @@ ALTER PROCEDURE sp_CreateUser (
     GOTO ExitProc
   END
 
-  INSERT INTO Users (Login, Password, Role, Scope, Address) VALUES (@Login, @Password, @Role, @Scope, @Address)
+  INSERT INTO Users (Login, Password, Role, Scopes, Address) VALUES (@Login, @Password, @Role, @Scopes, @Address)
   IF @@ERROR <> 0 OR @@ROWCOUNT <> 1 BEGIN
     SET @Error = 15
     GOTO ExitProc

@@ -48,7 +48,7 @@ public class Authentication {
         User user;
         try {
             UsersManager usersManager = new UsersManager(source);
-            user = usersManager.login(request.getLogin(), request.getPassword(), role);
+            user = usersManager.login(request.getLogin(), request.getPassword());
             if (user == null)
                 throw new IllegalArgumentException();
 

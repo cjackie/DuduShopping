@@ -32,7 +32,7 @@ public class UsersManagerTest extends TestBase {
     public void createUser() throws Exception {
         Assume.assumeTrue(manager != null);
 //        User user = manager.createUser("jack", "test123", UsersManager.USER_ROLE_CUSTOMER, UsersManager.SCOPE_CUSTOMER, "");
-        User user = manager.createUser("saleAgent1", "test123", UsersManager.USER_ROLE_SALE_AGENT, UsersManager.SCOPE_CUSTOMER, "");
+        User user = manager.createUser("saleAgent4", "test123", UsersManager.USER_ROLE_SALE_AGENT, UsersManager.SCOPE_CUSTOMER, "");
 
         System.out.println("UserId: " + user.getUserId());
         System.out.println("Login: " + user.getLogin());
@@ -41,7 +41,7 @@ public class UsersManagerTest extends TestBase {
     @Test
     public void login() throws Exception {
         Assume.assumeTrue(manager != null);
-        User user = manager.login("jack", "test123", UsersManager.USER_ROLE_CUSTOMER);
+        User user = manager.login("jack", "test123");
 
         System.out.println("UserId: " + user.getUserId());
         System.out.println("Login: " + user.getLogin());
@@ -51,7 +51,7 @@ public class UsersManagerTest extends TestBase {
     @Test
     public void getUser() throws Exception {
         Assume.assumeTrue(manager != null);
-        User user = manager.getUser("jack", "test123", UsersManager.USER_ROLE_CUSTOMER);
+        User user = manager.getUser("jack", "test123");
 
         System.out.println("UserId: " + user.getUserId());
         System.out.println("Login: " + user.getLogin());
