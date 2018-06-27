@@ -1,5 +1,7 @@
 package com.dudu.users;
 
+import com.dudu.cache.Cache;
+import com.dudu.cache.FifoCache;
 import com.dudu.common.CryptoUtil;
 import com.dudu.database.DBHelper;
 import com.dudu.database.StoredProcedure;
@@ -24,16 +26,10 @@ public class UsersManager {
     public static final String SCOPE_CUSTOMER = "customer";
     public static final String SCOPE_SALE_AGENT = "sale agent";
     private static final String SALT = "pom^bc&yjena!~sixdb42*)sjd";
-    private static final ConcurrentHashMap<String, User> usersCached = new ConcurrentHashMap<>();
     private static Logger logger = LogManager.getLogger(UsersManager.class);
 
-    static {
-        // simple clean up
-        BackgroundService.getInstance().schedule(() -> {
-            logger.info("clearing cache of size " + usersCached.size());
-            usersCached.clear();
-        }, 1, TimeUnit.HOURS);
-    }
+    // proximally 1MB in size at peak
+    private static Cache<User> usersCache = new FifoCache<>(10000);
 
     private DataSource source;
 
@@ -89,9 +85,17 @@ public class UsersManager {
      * @throws Exception
      */
     public User getUser(long userId) throws Exception {
+        // check cache.
+        User user = usersCache.get(String.valueOf(userId));
+        if (user != null) {
+            return user;
+        }
+
         try (Connection conn = source.getConnection()) {
             List<ZetaMap> zmaps = DBHelper.getHelper().execToZetaMaps(conn, "SELECT * FROM Users WHERE UserId = ?", userId);
-            return User.from(zmaps.get(0));
+            user = User.from(zmaps.get(0));
+            usersCache.cache(String.valueOf(user.getUserId()), user);
+            return user;
         }
     }
 

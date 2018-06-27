@@ -55,5 +55,14 @@ public class UsersManagerTest extends TestBase {
 
         System.out.println("UserId: " + user.getUserId());
         System.out.println("Login: " + user.getLogin());
+
+        long userId = 1;
+        user = manager.getUser(userId);
+        System.out.println("UserId: " + user.getUserId());
+        System.out.println("Login: " + user.getLogin());
+
+        user = manager.getUser(userId);
+        System.out.println("UserId: " + user.getUserId());
+        System.out.println("Login: " + user.getLogin());
     }
 }
