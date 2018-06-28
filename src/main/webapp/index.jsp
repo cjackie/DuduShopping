@@ -12,6 +12,11 @@
     <title>$Title$</title>
   </head>
   <body>
-  $END$ change
+    <div id="main"></div>
+
+    <script type="text/javascript" src="${pageContext.request.contextPath}/react-bundle.js"></script>
+    <script type="text/javascript">
+      DuduShopping.render({id: "main"});
+    </script>
   </body>
 </html>

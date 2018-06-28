@@ -12,3 +12,6 @@ out/
 
 # ignore conf files
 /conf/
+
+# npm libraries
+/ui/node_modules
