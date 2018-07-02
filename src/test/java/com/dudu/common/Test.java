@@ -1,6 +1,9 @@
 package com.dudu.common;
 
+import com.dudu.database.DBManager;
 import com.dudu.users.User;
+import redis.clients.jedis.JedisPool;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,5 +36,13 @@ public class Test extends TestBase {
         long freeMemory2 = Runtime.getRuntime().freeMemory();
 
         println("Each user is size of " + ((freeMemory - freeMemory2)/size) + " bytes");
+    }
+
+    @org.junit.Test
+    public void redisDb() throws Exception {
+        JedisPool pool = DBManager.getManager().getChatRoomRedisPool();
+        println(pool.getResource());
+        println(pool.getResource().ping());
+        pool.getResource().hset("jacktest", "t", "3");
     }
 }
