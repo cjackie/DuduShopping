@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import redis.clients.jedis.JedisPool;
 
 import javax.sql.DataSource;
 import java.util.LinkedHashMap;
@@ -17,6 +18,7 @@ import java.util.Properties;
 public class DBManager {
     public static final String DATABASE_DUDU_SHOPPING = "DuduShopping";
     private static Logger logger = LogManager.getLogger(DBManager.class);
+    private static JedisPool chatRoomRedisPool;
 
     private static DBManager ourInstance = new DBManager();
     private static Map<String, HikariDataSource> dataSources;
@@ -61,6 +63,15 @@ public class DBManager {
             dataSources.put(dbName, source);
         }
 
+        try {
+            String host = properties.getProperty("chatroom.redis.host");
+            String port = properties.getProperty("chatroom.redis.port");
+
+            chatRoomRedisPool = new JedisPool(host, Integer.parseInt(port));
+        } catch (Exception e) {
+            logger.error("fail to initialize chat room redis: ", e);
+        }
+
         if (dataSources.get(DATABASE_DUDU_SHOPPING) == null)
             throw new IllegalArgumentException("Missing dudu shopping database");
     }
@@ -69,4 +80,11 @@ public class DBManager {
         return dataSources.get(dbName);
     }
 
+    public JedisPool getChatRoomRedisPool() {
+        return chatRoomRedisPool;
+    }
+
+    public void setChatRoomRedisPool(JedisPool chatRoomRedisPool) {
+        DBManager.chatRoomRedisPool = chatRoomRedisPool;
+    }
 }
