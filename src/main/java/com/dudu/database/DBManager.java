@@ -19,7 +19,7 @@ public class DBManager {
     public static final String DATABASE_DUDU_SHOPPING = "DuduShopping";
     private static Logger logger = LogManager.getLogger(DBManager.class);
     private static JedisPool chatRoomRedisPool;
-
+    private static JedisPool cacheRedisPool;
     private static DBManager ourInstance = new DBManager();
     private static Map<String, HikariDataSource> dataSources;
 
@@ -63,6 +63,9 @@ public class DBManager {
             dataSources.put(dbName, source);
         }
 
+        if (dataSources.get(DATABASE_DUDU_SHOPPING) == null)
+            throw new IllegalArgumentException("Missing dudu shopping database");
+
         try {
             String host = properties.getProperty("chatroom.redis.host");
             String port = properties.getProperty("chatroom.redis.port");
@@ -70,10 +73,18 @@ public class DBManager {
             chatRoomRedisPool = new JedisPool(host, Integer.parseInt(port));
         } catch (Exception e) {
             logger.error("fail to initialize chat room redis: ", e);
+            throw new IllegalStateException("fail to initialize chat room redis");
         }
 
-        if (dataSources.get(DATABASE_DUDU_SHOPPING) == null)
-            throw new IllegalArgumentException("Missing dudu shopping database");
+        try {
+            String host = properties.getProperty("cache.redis.host");
+            String port = properties.getProperty("cache.redis.port");
+
+            cacheRedisPool = new JedisPool(host, Integer.parseInt(port));
+        } catch (Exception e) {
+            logger.error("failed to initialize a cache");
+            throw new IllegalStateException("Failed to initialize redis cache");
+        }
     }
 
     public DataSource getDataSource(String dbName) {
@@ -82,6 +93,10 @@ public class DBManager {
 
     public JedisPool getChatRoomRedisPool() {
         return chatRoomRedisPool;
+    }
+
+    public JedisPool getCacheRedisPool() {
+        return cacheRedisPool;
     }
 
     public void setChatRoomRedisPool(JedisPool chatRoomRedisPool) {

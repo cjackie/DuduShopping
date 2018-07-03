@@ -44,5 +44,12 @@ public class Test extends TestBase {
         println(pool.getResource());
         println(pool.getResource().ping());
         pool.getResource().hset("jacktest", "t", "3");
+
+        println(pool.getResource().hget("unknown1", "t") == null);
+    }
+
+    @org.junit.Test
+    public void className() {
+        println(Test.class.getName());
     }
 }

@@ -24,7 +24,7 @@ public class WebInit extends HttpServlet {
             DBManager.init(properties);
 
             DataSource duduShoppingSource = DBManager.getManager().getDataSource(DBManager.DATABASE_DUDU_SHOPPING);
-            SQLTokenManager.init(duduShoppingSource);
+            SQLTokenManager.init(duduShoppingSource, DBManager.getManager().getCacheRedisPool());
             ApiEndpointChecker.configure(duduShoppingSource);
 
         } catch (Exception e) {

@@ -5,9 +5,9 @@ import com.dudu.database.DBManager;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import redis.clients.jedis.JedisPool;
 
 import javax.sql.DataSource;
-import java.util.List;
 
 /**
  * Created by chaojiewang on 5/12/18.
@@ -22,10 +22,11 @@ public class SQLTokenManagerTest extends TestBase {
 
         try {
             DataSource source = DBManager.getManager().getDataSource("DuduShopping");
-            if (!dbReady || source == null)
+            JedisPool jedisPool = DBManager.getManager().getCacheRedisPool();
+            if (!dbReady || source == null || jedisPool == null)
                 return;
 
-            SQLTokenManager.init(source);
+            SQLTokenManager.init(source, jedisPool);
             tokenManager = SQLTokenManager.getManager();
             ready = true;
         } catch (Exception e) {
@@ -48,7 +49,7 @@ public class SQLTokenManagerTest extends TestBase {
     public void checkToken() throws Exception {
         Assume.assumeTrue(ready);
 
-        String token = "Er3c4vEwq7iU5qAAb5RD0KVEDJjrwi3r8+BmMXsh9dtDGXcET+KIjdxbbHQ246MN/UDOsYc/dK9J97hu";
+        String token = "pRoBCg9mgOyRiSmGEMR3UaErxjSi00KbnA5+qojcLUA+y7XJFXQiu0kX4Xd+93OuIDAYK6Abge+P7NbN";
         long userId = SQLTokenManager.getManager().checkToken(token);
 
         println("UserId=" + userId);
