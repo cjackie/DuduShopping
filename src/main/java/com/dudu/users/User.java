@@ -1,6 +1,7 @@
 package com.dudu.users;
 
 import com.dudu.database.ZetaMap;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -115,6 +116,7 @@ public class User implements Principal {
     }
 
     @Override
+    @JsonIgnore
     public String getName() {
         return getLogin() + "." + role;
     }

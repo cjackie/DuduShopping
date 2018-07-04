@@ -5,6 +5,7 @@ import com.dudu.users.ApiEndpointChecker;
 import com.dudu.users.SQLTokenManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import redis.clients.jedis.JedisPool;
 
 import javax.servlet.http.HttpServlet;
 import javax.sql.DataSource;
@@ -24,7 +25,9 @@ public class WebInit extends HttpServlet {
             DBManager.init(properties);
 
             DataSource duduShoppingSource = DBManager.getManager().getDataSource(DBManager.DATABASE_DUDU_SHOPPING);
-            SQLTokenManager.init(duduShoppingSource, DBManager.getManager().getCacheRedisPool());
+            JedisPool cache = DBManager.getManager().getCacheRedisPool();
+
+            SQLTokenManager.init(duduShoppingSource, cache);
             ApiEndpointChecker.configure(duduShoppingSource);
 
         } catch (Exception e) {

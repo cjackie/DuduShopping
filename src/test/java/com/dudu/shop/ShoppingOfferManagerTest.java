@@ -7,6 +7,7 @@ import com.dudu.users.UsersManager;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import redis.clients.jedis.JedisPool;
 
 import javax.sql.DataSource;
 
@@ -25,7 +26,8 @@ public class ShoppingOfferManagerTest extends TestBase {
         try {
             if (dbReady) {
                 DataSource source = DBManager.getManager().getDataSource("DuduShopping");
-                usersManager = new UsersManager(source);
+                JedisPool cache = DBManager.getManager().getCacheRedisPool();
+                usersManager = new UsersManager(source, cache);
                 saleAgent = usersManager.getUser(3);
                 shoppingOfferManager = new ShoppingOfferManager(source);
             }

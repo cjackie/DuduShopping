@@ -7,6 +7,7 @@ import com.dudu.users.UsersManager;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import redis.clients.jedis.JedisPool;
 
 import javax.sql.DataSource;
 
@@ -23,11 +24,12 @@ public class ShoppingRequestManagerTest extends TestBase {
 
         try {
             DataSource source = DBManager.getManager().getDataSource("DuduShopping");
-            if (!dbReady || source == null)
+            JedisPool cache = DBManager.getManager().getCacheRedisPool();
+            if (!dbReady || source == null || cache == null)
                 return;
 
             shoppingRequestManager = new ShoppingRequestManager(source);
-            usersManager = new UsersManager(source);
+            usersManager = new UsersManager(source, cache);
         } catch (Exception e) {
             System.out.println(e);
         }

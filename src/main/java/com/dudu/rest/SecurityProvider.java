@@ -58,7 +58,8 @@ public class SecurityProvider implements ReaderInterceptor, ContainerRequestFilt
             long userId = tokenManager.checkToken(token);
 
             // It is valid token. get user
-            UsersManager usersManager = new UsersManager(DBManager.getManager().getDataSource(DBManager.DATABASE_DUDU_SHOPPING));
+            DBManager dbManager = DBManager.getManager();
+            UsersManager usersManager = new UsersManager(dbManager.getDataSource(DBManager.DATABASE_DUDU_SHOPPING), dbManager.getCacheRedisPool());
             user = usersManager.getUser(userId);
         } catch (Exception e) {
             logger.warn("Invalid token:", e);

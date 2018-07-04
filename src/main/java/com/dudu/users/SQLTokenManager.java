@@ -2,6 +2,7 @@ package com.dudu.users;
 
 
 import com.dudu.common.CryptoUtil;
+import com.dudu.common.StandardObjectMapper;
 import com.dudu.database.DBHelper;
 import com.dudu.database.ZetaMap;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,7 +14,6 @@ import redis.clients.jedis.JedisPool;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 
@@ -34,8 +34,7 @@ public class SQLTokenManager implements TokenManager  {
     public static void init(DataSource source, JedisPool jedisPool) throws Exception {
         SQLTokenManager.source = source;
         SQLTokenManager.jedisPool = jedisPool;
-        objectMapper = new ObjectMapper();
-        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
+        objectMapper = StandardObjectMapper.getInstance();
         cacheTimeout = 60*60;
     }
 
@@ -93,7 +92,7 @@ public class SQLTokenManager implements TokenManager  {
             Date issuedAt = new Date();
             int expiresIn = 60*60; // two hours
 
-            UsersManager usersManager = new UsersManager(source);
+            UsersManager usersManager = new UsersManager(source, jedisPool);
             User user = usersManager.getUser(userId);
             String scope = user.getRawScopes();
 

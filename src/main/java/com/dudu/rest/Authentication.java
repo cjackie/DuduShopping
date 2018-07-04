@@ -5,6 +5,7 @@ import com.dudu.database.DBManager;
 import com.dudu.users.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import redis.clients.jedis.JedisPool;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
@@ -40,6 +41,7 @@ public class Authentication {
      */
     private TokenResponse authenticate(AuthenticationRequest request, char role) throws NotAuthorizedException {
         DataSource source = DBManager.getManager().getDataSource(DBManager.DATABASE_DUDU_SHOPPING);
+        JedisPool cache = DBManager.getManager().getCacheRedisPool();
 
         if (request.getLogin() == null || request.getPassword() == null)
             throw new BadRequestException();
@@ -47,7 +49,7 @@ public class Authentication {
 
         User user;
         try {
-            UsersManager usersManager = new UsersManager(source);
+            UsersManager usersManager = new UsersManager(source, cache);
             user = usersManager.login(request.getLogin(), request.getPassword());
             if (user == null)
                 throw new IllegalArgumentException();

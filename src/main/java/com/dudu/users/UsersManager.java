@@ -1,13 +1,15 @@
 package com.dudu.users;
 
-import com.dudu.cache.Cache;
-import com.dudu.cache.FifoCache;
 import com.dudu.common.CryptoUtil;
+import com.dudu.common.StandardObjectMapper;
 import com.dudu.database.DBHelper;
 import com.dudu.database.StoredProcedure;
 import com.dudu.database.ZetaMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -18,21 +20,24 @@ import java.util.List;
  * Created by chaojiewang on 5/10/18.
  */
 public class UsersManager {
-
     public static final char USER_ROLE_CUSTOMER = 'C';
     public static final char USER_ROLE_SALE_AGENT = 'S';
     public static final String SCOPE_CUSTOMER = "customer";
     public static final String SCOPE_SALE_AGENT = "sale agent";
+    private static final String CACHE_USER = "/cache/" + UsersManager.class.getName() + "/user/";
     private static final String SALT = "pom^bc&yjena!~sixdb42*)sjd";
     private static Logger logger = LogManager.getLogger(UsersManager.class);
 
-    // proximally 1MB in size at peak
-    private static Cache<User> usersCache = new FifoCache<>(10000);
-
+    private JedisPool jedisPool;
     private DataSource source;
+    private ObjectMapper objectMapper;
+    private int cacheTimeout;
 
-    public UsersManager(DataSource source) {
+    public UsersManager(DataSource source, JedisPool jedisPool) {
+        this.jedisPool = jedisPool;
         this.source = source;
+        this.objectMapper = StandardObjectMapper.getInstance();
+        this.cacheTimeout = 60*60;
     }
 
     /**
@@ -80,16 +85,22 @@ public class UsersManager {
      * @throws Exception
      */
     public User getUser(long userId) throws Exception {
-        // check cache.
-        User user = usersCache.get(String.valueOf(userId));
-        if (user != null) {
-            return user;
-        }
+        try (Jedis jedis = jedisPool.getResource();
+             Connection conn = source.getConnection()) {
 
-        try (Connection conn = source.getConnection()) {
+            // check cache
+            String userJson = jedis.get(CACHE_USER + userId);
+            if (userJson != null) {
+                return objectMapper.readValue(userJson, User.class);
+            }
+
             List<ZetaMap> zmaps = DBHelper.getHelper().execToZetaMaps(conn, "SELECT * FROM Users WHERE UserId = ?", userId);
-            user = User.from(zmaps.get(0));
-            usersCache.cache(String.valueOf(user.getUserId()), user);
+            User user = User.from(zmaps.get(0));
+
+            // cache
+            jedis.set(CACHE_USER + userId, objectMapper.writeValueAsString(user));
+            jedis.expire(CACHE_USER + userId, cacheTimeout);
+
             return user;
         }
     }
