@@ -2,6 +2,7 @@ package com.dudu.users;
 
 
 import com.dudu.common.CryptoUtil;
+import com.dudu.common.RedisConstants;
 import com.dudu.common.StandardObjectMapper;
 import com.dudu.database.DBHelper;
 import com.dudu.database.ZetaMap;
@@ -22,8 +23,7 @@ import java.util.*;
  */
 public class SQLTokenManager implements TokenManager  {
     private static Logger logger = LogManager.getLogger(SQLTokenManager.class);
-    private static final String REDIS_CACHE_PREFIX = "/cache/" + SQLTokenManager.class.getName() + "/";
-    private static final String TOKEN_OBJECT_BY_TOKEN = REDIS_CACHE_PREFIX + "tokenObjectByToken/";
+    private static final String TOKEN_OBJECT_BY_TOKEN = RedisConstants.CACHE_TOKEN_OBJECTS +"by_token_str/";
     private static int cacheTimeout; // in unit seconds.
     private static ObjectMapper objectMapper;
     private static DataSource source;

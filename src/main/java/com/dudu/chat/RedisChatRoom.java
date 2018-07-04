@@ -1,5 +1,6 @@
 package com.dudu.chat;
 
+import com.dudu.common.RedisConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -35,19 +36,19 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
      * }
      *
      **/
-    private static final String REDIS_CHANNEL_PREFIX = "/ch/chatRoom/";
+    protected static final String REDIS_CHANNEL_PREFIX = RedisConstants.CHANNEL_CHATROOM;
 
     /**
      * hash set of participant ids
      */
-    private static final String REDIS_CHAT_PARTICIPANTS = "/data/chatRoom/participants/";
+    protected static final String REDIS_CHAT_PARTICIPANTS = RedisConstants.DATA_CHATROOM_PARTICIPANTS;
 
-    private JedisPool jedisPool;
-    private Jedis jedis;
-    private String roomId;
-    private ChatMessageReceiver receiver;
-    private PublishingListener listener;
-    private Map<String, ChatParticipant> participants;
+    protected JedisPool jedisPool;
+    protected Jedis jedis;
+    protected String roomId;
+    protected ChatMessageReceiver receiver;
+    protected PublishingListener listener;
+    protected Map<String, ChatParticipant> participants;
 
     /**
      *

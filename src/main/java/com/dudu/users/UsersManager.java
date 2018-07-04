@@ -1,6 +1,7 @@
 package com.dudu.users;
 
 import com.dudu.common.CryptoUtil;
+import com.dudu.common.RedisConstants;
 import com.dudu.common.StandardObjectMapper;
 import com.dudu.database.DBHelper;
 import com.dudu.database.StoredProcedure;
@@ -24,7 +25,7 @@ public class UsersManager {
     public static final char USER_ROLE_SALE_AGENT = 'S';
     public static final String SCOPE_CUSTOMER = "customer";
     public static final String SCOPE_SALE_AGENT = "sale agent";
-    private static final String CACHE_USER = "/cache/" + UsersManager.class.getName() + "/user/";
+    private static final String CACHE_USER = RedisConstants.CACHE_USER_OBJECTS + "user_id/";
     private static final String SALT = "pom^bc&yjena!~sixdb42*)sjd";
     private static Logger logger = LogManager.getLogger(UsersManager.class);
 
