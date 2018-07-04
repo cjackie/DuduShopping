@@ -200,7 +200,9 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                 }
             };
 
-            jedisPool.getResource().subscribe(subscription, getNewMessageChannel(), getParticipantsUpdatedChannel());
+            Jedis jedis = jedisPool.getResource();
+            jedis.subscribe(subscription, getNewMessageChannel(), getParticipantsUpdatedChannel());
+            jedis.close();
             while (!stop) { }
 
             if (DEBUG)
