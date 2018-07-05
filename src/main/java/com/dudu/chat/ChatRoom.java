@@ -18,5 +18,5 @@ interface ChatRoom {
 
     void publish(ChatMessage message);
 
-    void setReceiver(ChatMessageReceiver receiver);
+    void setEventHandler(ChatEventHandler eventHandler);
 }

@@ -1,10 +1,10 @@
 package com.dudu.chat;
 
 import com.dudu.common.RedisConstants;
+import com.dudu.common.StandardObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
@@ -16,11 +16,14 @@ import java.util.Set;
 
 public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseable {
     private static final Logger logger = LogManager.getLogger(RedisChatRoom.class);
+    private static final ObjectMapper objectMapper = StandardObjectMapper.getInstance();
     public static boolean DEBUG = false;
 
     public static final int ACTION_TYPE_NEW_MESSAGE = 1;
 
-    public static final int ACTION_TYPE_PARTICIPANTS_UPDATED = 2;
+    public static final int ACTION_TYPE_PARTICIPANT_EXIT = 2;
+
+    public static final int ACTION_TYPE_PARTICIPANT_JOIN = 3;
 
     /**
      * channel name for publishing and subscribing... it is appended by REDIS_CHANNEL_ROOM_ID to generate a
@@ -44,21 +47,19 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
     protected static final String REDIS_CHAT_PARTICIPANTS = RedisConstants.DATA_CHATROOM_PARTICIPANTS;
 
     protected JedisPool jedisPool;
-    protected Jedis jedis;
     protected String roomId;
-    protected ChatMessageReceiver receiver;
+    protected ChatEventHandler eventHandler;
     protected PublishingListener listener;
     protected Map<String, ChatParticipant> participants;
 
     /**
      *
-     * @param roomId uniqueness must be guaranteed.
+     * @param roomId a magic number. its uniqueness must be guaranteed.
      * @param jedisPool
      */
     public RedisChatRoom(String roomId, JedisPool jedisPool) throws Exception {
         this.jedisPool = jedisPool;
         this.roomId = roomId;
-        this.jedis = jedisPool.getResource();
 
         refreshParticipants();
 
@@ -73,9 +74,11 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
 
         participants.put(participant.getChatParticipantId(), participant);
 
-        if (!jedis.sismember(getParticipantsKey(), participant.getChatParticipantId())) {
-            jedis.sadd(getParticipantsKey(), participant.getChatParticipantId());
-            jedis.publish(getParticipantsUpdatedChannel(), "");
+        try (Jedis jedis = jedisPool.getResource()) {
+            if (!jedis.sismember(redisKeyParticipants(), participant.getChatParticipantId())) {
+                jedis.sadd(redisKeyParticipants(), participant.getChatParticipantId());
+                jedis.publish(actionTypeParticipantJoin(), String.valueOf(participant.getChatParticipantId()));
+            }
         }
     }
 
@@ -85,41 +88,44 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
             logger.debug("participant [" + participant.getChatParticipantId() + "] exits room [" + roomId + "]");
 
         participants.remove(participant.getChatParticipantId());
-        if (jedis.sismember(getParticipantsKey(), participant.getChatParticipantId())) {
-            jedis.srem(getParticipantsKey(), participant.getChatParticipantId());
-            jedis.publish(getParticipantsUpdatedChannel(), "");
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            if (jedis.sismember(redisKeyParticipants(), participant.getChatParticipantId())) {
+                jedis.srem(redisKeyParticipants(), participant.getChatParticipantId());
+                jedis.publish(actionTypeParticipantExit(), String.valueOf(participant.getChatParticipantId()));
+            }
         }
     }
 
     @Override
     public void publish(ChatMessage message) {
-        if (participants.get(message.getParticipant().getChatParticipantId()) == null) {
+        if (participants.get(message.getChatParticipantId()) == null) {
             logger.warn("Participant is not this room: participantId="
-                    + message.getParticipant().getChatParticipantId() + ", roomId=" + roomId);
+                    + message.getChatParticipantId() + ", roomId=" + roomId);
             return;
         }
 
-        String participantId = message.getParticipant().getChatParticipantId();
-        String msg = message.getMessage();
-
-        JSONObject data = new JSONObject();
-        data.put("participantId", participantId);
-        data.put("message", msg);
-        jedis.publish(getNewMessageChannel(), data.toString());
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.publish(actionTypeNewMessage(), objectMapper.writeValueAsString(message));
+        } catch (Exception e) {
+            logger.error("Failed to publish: ", e);
+        }
     }
 
     @Override
-    public void setReceiver(ChatMessageReceiver receiver) {
-        this.receiver = receiver;
+    public void setEventHandler(ChatEventHandler eventHandler) {
+        this.eventHandler = eventHandler;
     }
 
     private void refreshParticipants() {
-        Set<String> participantIds = jedis.smembers(getParticipantsKey());
+        try (Jedis jedis = jedisPool.getResource()) {
+            Set<String> participantIds = jedis.smembers(redisKeyParticipants());
 
-        this.participants = new HashMap<>();
-        for (String participantId : participantIds) {
-            RedisChatRoomParticipant participant = new RedisChatRoomParticipant(participantId);
-            this.participants.put(participantId, participant);
+            this.participants = new HashMap<>();
+            for (String participantId : participantIds) {
+                RedisChatRoomParticipant participant = new RedisChatRoomParticipant(participantId);
+                this.participants.put(participantId, participant);
+            }
         }
     }
 
@@ -127,15 +133,19 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         return roomId;
     }
 
-    private String getNewMessageChannel() {
+    private String actionTypeNewMessage() {
         return REDIS_CHANNEL_PREFIX + roomId + "/" + ACTION_TYPE_NEW_MESSAGE;
     }
 
-    private String getParticipantsUpdatedChannel() {
-        return REDIS_CHANNEL_PREFIX + roomId + "/" + ACTION_TYPE_PARTICIPANTS_UPDATED;
+    private String actionTypeParticipantJoin() {
+        return REDIS_CHANNEL_PREFIX + roomId + "/" + ACTION_TYPE_PARTICIPANT_JOIN;
     }
 
-    private String getParticipantsKey() {
+    private String actionTypeParticipantExit() {
+        return REDIS_CHANNEL_PREFIX + roomId + "/" + ACTION_TYPE_PARTICIPANT_EXIT;
+    }
+
+    private String redisKeyParticipants() {
         return REDIS_CHAT_PARTICIPANTS + roomId;
     }
 
@@ -166,27 +176,27 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         public void run() {
             subscription = new JedisPubSub() {
                 @Override
-                public void onMessage(String channel, String message) {
+                public void onMessage(String channel, String data) {
                     try {
-                        if (channel.equals(getNewMessageChannel())) {
+                        if (channel.equals(actionTypeNewMessage())) {
                             if (DEBUG)
-                                logger.debug("Getting a new message: " + message);
+                                logger.debug("Getting a new message: " + data);
 
-                            JSONObject data = new JSONObject(new JSONTokener(message));
-                            String participantId = data.getString("participantId");
-                            String participantMessage = data.getString("message");
+                            ChatMessage chatMessage = objectMapper.readValue(data, ChatMessage.class);
+                            if (!participants.containsKey(chatMessage.getChatParticipantId()))
+                                throw new IllegalArgumentException("Unknown participant: " + chatMessage.getParticipantId());
 
-                            if (!participants.containsKey(participantId))
-                                throw new IllegalArgumentException("Unknown participant: " + participantId);
-
-                            ChatMessage chatMessage = new ChatMessage(new RedisChatRoomParticipant(participantId), participantMessage);
-                            receiver.receive(chatMessage);
-                        } else if (channel.equals(getParticipantsUpdatedChannel())) {
-                            refreshParticipants();
-                        } else
+                            eventHandler.receive(chatMessage);
+                        } else if (channel.equals(actionTypeParticipantJoin())) {
+                            eventHandler.onParticipantJoin(() -> data);
+                        } else if (channel.equals(actionTypeParticipantExit())) {
+                            eventHandler.onParticipantExit(() -> data);
+                        } else {
                             throw new IllegalStateException("Unknown channel: " + channel);
+                        }
+
                     } catch (Exception e) {
-                        logger.warn("Failed to process a message from channel: " + channel + ", message: " + message, e);
+                        logger.warn("Failed to process a message from channel: " + channel + ", data: " + data, e);
                     }
                 }
 
@@ -201,13 +211,14 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                 }
             };
 
-            Jedis jedis = jedisPool.getResource();
-            jedis.subscribe(subscription, getNewMessageChannel(), getParticipantsUpdatedChannel());
-            jedis.close();
-            while (!stop) { }
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.subscribe(subscription, actionTypeNewMessage(), actionTypeParticipantJoin(), actionTypeParticipantExit());
+                jedis.close();
+                while (!stop) { }
 
-            if (DEBUG)
-                logger.debug("exiting subscription");
+                if (DEBUG)
+                    logger.debug("exiting subscription");
+            }
         }
     }
 }

@@ -6,8 +6,10 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RedisChatRoomTest extends TestBase implements ChatMessageReceiver {
-    private String roomId = "TEST1";
+import java.util.Date;
+
+public class RedisChatRoomTest extends TestBase implements ChatEventHandler {
+    private String roomId = "TEST3";
 
     @Before
     public void setup() {
@@ -24,11 +26,21 @@ public class RedisChatRoomTest extends TestBase implements ChatMessageReceiver {
             ChatParticipantImpl jack = new ChatParticipantImpl();
             jack.id = "jack";
 
-            room.setReceiver(this);
+            room.setEventHandler(this);
             room.join(tom);
             room.join(jack);
-            room.publish(new ChatMessage(tom, "hello, my name is tom"));
-            room.publish(new ChatMessage(jack, "hello, my name is jack"));
+
+            ChatMessage tomSaid = new ChatMessage();
+            tomSaid.setMessage("Hello, this is Tom");
+            tomSaid.setCreatedAt(new Date());
+            tomSaid.setParticipantId(tom.getChatParticipantId());
+            room.publish(tomSaid);
+
+            ChatMessage jackSaid = new ChatMessage();
+            jackSaid.setMessage("Hello, this is Jack");
+            jackSaid.setCreatedAt(new Date());
+            jackSaid.setParticipantId(jack.getChatParticipantId());
+            room.publish(jackSaid);
 
             while (true) { }
         }
@@ -36,7 +48,17 @@ public class RedisChatRoomTest extends TestBase implements ChatMessageReceiver {
 
     @Override
     public void receive(ChatMessage message) {
-        println(message.getParticipant().getChatParticipantId() + " said '" + message.getMessage() + "'");
+        println(message.getChatParticipantId() + " said '" + message.getMessage() + "'");
+    }
+
+    @Override
+    public void onParticipantJoin(ChatParticipant participant) {
+        println(participant.getChatParticipantId() + " joins the room");
+    }
+
+    @Override
+    public void onParticipantExit(ChatParticipant participant) {
+        println(participant.getChatParticipantId() + " exits the room");
     }
 
     private class ChatParticipantImpl implements ChatParticipant {
