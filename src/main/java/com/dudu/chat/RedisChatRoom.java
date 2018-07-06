@@ -9,9 +9,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseable {
@@ -25,32 +23,16 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
 
     public static final int ACTION_TYPE_PARTICIPANT_JOIN = 3;
 
-    /**
-     * channel name for publishing and subscribing... it is appended by REDIS_CHANNEL_ROOM_ID to generate a
-     * unique key for a room and action type...
-     *
-     * example:
-     * REDIS_CHANNEL_PREFIX + "roomId10/" + ACTION_TYPE_PARTICIPANTS_UPDATED
-     *
-     * data:
-     * {
-     *     participantId: "",
-     *     message: ""
-     * }
-     *
-     **/
     protected static final String REDIS_CHANNEL_PREFIX = RedisConstants.CHANNEL_CHATROOM;
 
-    /**
-     * hash set of participant ids
-     */
     protected static final String REDIS_CHAT_PARTICIPANTS = RedisConstants.DATA_CHATROOM_PARTICIPANTS;
+
+    protected static final String REDIS_CHAT_MESSAGES = RedisConstants.DATA_CHATROOM_MESSAGES;
 
     protected JedisPool jedisPool;
     protected String roomId;
     protected ChatEventHandler eventHandler;
     protected PublishingListener listener;
-    protected Map<String, ChatParticipant> participants;
 
     /**
      *
@@ -61,8 +43,6 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         this.jedisPool = jedisPool;
         this.roomId = roomId;
 
-        refreshParticipants();
-
         listener = new PublishingListener();
         listener.start();
     }
@@ -72,13 +52,17 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         if (DEBUG)
             logger.debug("participant [" + participant.getChatParticipantId() + "] joins room [" + roomId + "]");
 
-        participants.put(participant.getChatParticipantId(), participant);
-
         try (Jedis jedis = jedisPool.getResource()) {
-            if (!jedis.sismember(redisKeyParticipants(), participant.getChatParticipantId())) {
-                jedis.sadd(redisKeyParticipants(), participant.getChatParticipantId());
-                jedis.publish(actionTypeParticipantJoin(), String.valueOf(participant.getChatParticipantId()));
+            if (!(participant instanceof RedisChatRoomParticipant))
+                throw new IllegalArgumentException("Expecting RedisChatRoomParticipant.");
+
+            if (!jedis.hexists(redisKeyParticipants(), participant.getChatParticipantId())) {
+                String data = objectMapper.writeValueAsString(participant);
+                jedis.hset(redisKeyParticipants(), participant.getChatParticipantId(), data);
+                jedis.publish(actionTypeParticipantJoin(), data);
             }
+        } catch (Exception e) {
+            logger.error("Failed to join a participant: ", e);
         }
     }
 
@@ -87,11 +71,9 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         if (DEBUG)
             logger.debug("participant [" + participant.getChatParticipantId() + "] exits room [" + roomId + "]");
 
-        participants.remove(participant.getChatParticipantId());
-
         try (Jedis jedis = jedisPool.getResource()) {
-            if (jedis.sismember(redisKeyParticipants(), participant.getChatParticipantId())) {
-                jedis.srem(redisKeyParticipants(), participant.getChatParticipantId());
+            if (jedis.hexists(redisKeyParticipants(), participant.getChatParticipantId())) {
+                jedis.hdel(redisKeyParticipants(), participant.getChatParticipantId());
                 jedis.publish(actionTypeParticipantExit(), String.valueOf(participant.getChatParticipantId()));
             }
         }
@@ -99,13 +81,13 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
 
     @Override
     public void publish(ChatMessage message) {
-        if (participants.get(message.getChatParticipantId()) == null) {
-            logger.warn("Participant is not this room: participantId="
-                    + message.getChatParticipantId() + ", roomId=" + roomId);
-            return;
-        }
-
         try (Jedis jedis = jedisPool.getResource()) {
+            if (!jedis.hexists(redisKeyParticipants(), message.getChatParticipantId())) {
+                logger.warn("Participant is not this room: participantId="
+                        + message.getChatParticipantId() + ", roomId=" + roomId);
+                return;
+            }
+
             jedis.publish(actionTypeNewMessage(), objectMapper.writeValueAsString(message));
         } catch (Exception e) {
             logger.error("Failed to publish: ", e);
@@ -117,55 +99,68 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         this.eventHandler = eventHandler;
     }
 
-    private void refreshParticipants() {
-        try (Jedis jedis = jedisPool.getResource()) {
-            Set<String> participantIds = jedis.smembers(redisKeyParticipants());
-
-            this.participants = new HashMap<>();
-            for (String participantId : participantIds) {
-                RedisChatRoomParticipant participant = new RedisChatRoomParticipant(participantId);
-                this.participants.put(participantId, participant);
-            }
-        }
-    }
-
     public String getRoomId() {
         return roomId;
     }
 
-    private String actionTypeNewMessage() {
+    /**
+     * a new message is published. JSON format of ChatMessage
+     * @return
+     */
+    protected String actionTypeNewMessage() {
         return REDIS_CHANNEL_PREFIX + roomId + "/" + ACTION_TYPE_NEW_MESSAGE;
     }
 
-    private String actionTypeParticipantJoin() {
+    /**
+     * a new participant joined. JSON format of RedisChatRoomParticipant
+     * @return
+     */
+    protected String actionTypeParticipantJoin() {
         return REDIS_CHANNEL_PREFIX + roomId + "/" + ACTION_TYPE_PARTICIPANT_JOIN;
     }
 
-    private String actionTypeParticipantExit() {
+    /**
+     * a new participant exited. participantId
+     * @return
+     */
+    protected String actionTypeParticipantExit() {
         return REDIS_CHANNEL_PREFIX + roomId + "/" + ACTION_TYPE_PARTICIPANT_EXIT;
     }
 
-    private String redisKeyParticipants() {
+    /**
+     * hash map. particpantId -> RedisChatRoomParticipant
+     * @return
+     */
+    protected String redisKeyParticipants() {
         return REDIS_CHAT_PARTICIPANTS + roomId;
+    }
+
+    /**
+     * list of ChatMessage.
+     * @return
+     */
+    protected String redisKeyMessages() {
+        return REDIS_CHAT_MESSAGES + roomId;
+    }
+
+    protected List<ChatMessage> getAllMessages() {
+        try (Jedis jedis = jedisPool.getResource()) {
+            List<ChatMessage> messages = new ArrayList<>();
+            for (String msg : jedis.lrange(redisKeyMessages(), 0, -1)) {
+                messages.add(objectMapper.readValue(msg, ChatMessage.class));
+            }
+
+            return messages;
+        } catch (Exception e) {
+            logger.error("Failed to getAllMessages:", e);
+            return null;
+        }
     }
 
     @Override
     public void close() throws Exception {
         listener.stop = true;
         listener.subscription.unsubscribe();
-    }
-
-    private static class RedisChatRoomParticipant implements ChatParticipant {
-        String participantId;
-
-        RedisChatRoomParticipant(String participantId) {
-            this.participantId = participantId;
-        }
-
-        @Override
-        public String getChatParticipantId() {
-            return participantId;
-        }
     }
 
     private class PublishingListener extends Thread {
@@ -183,9 +178,12 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                                 logger.debug("Getting a new message: " + data);
 
                             ChatMessage chatMessage = objectMapper.readValue(data, ChatMessage.class);
-                            if (!participants.containsKey(chatMessage.getChatParticipantId()))
-                                throw new IllegalArgumentException("Unknown participant: " + chatMessage.getParticipantId());
+                            try (Jedis jedis = jedisPool.getResource()) {
+                                if (!jedis.hexists(redisKeyParticipants(), chatMessage.getChatParticipantId()))
+                                    throw new IllegalArgumentException("Unknown participant: " + chatMessage.getParticipantId());
 
+                                jedis.lpush(redisKeyMessages(), objectMapper.writeValueAsString(data));
+                            }
                             eventHandler.receive(chatMessage);
                         } else if (channel.equals(actionTypeParticipantJoin())) {
                             eventHandler.onParticipantJoin(() -> data);

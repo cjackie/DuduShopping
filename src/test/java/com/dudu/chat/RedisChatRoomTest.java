@@ -9,7 +9,7 @@ import org.junit.Test;
 import java.util.Date;
 
 public class RedisChatRoomTest extends TestBase implements ChatEventHandler {
-    private String roomId = "TEST3";
+    private String roomId = "TEST10";
 
     @Before
     public void setup() {
@@ -20,11 +20,13 @@ public class RedisChatRoomTest extends TestBase implements ChatEventHandler {
 
     @Test
     public void twoFriendsChat() throws Exception {
-        try (RedisChatRoom room = new RedisChatRoom(roomId, DBManager.getManager().getChatRoomRedisPool())) {
-            ChatParticipantImpl tom = new ChatParticipantImpl();
-            tom.id = "tom";
-            ChatParticipantImpl jack = new ChatParticipantImpl();
-            jack.id = "jack";
+        try (RedisChatRoom room = new RedisChatRoom(String.valueOf(roomId), DBManager.getManager().getChatRoomRedisPool())) {
+            RedisChatRoomParticipant tom = new RedisChatRoomParticipant();
+            tom.setParticipantId(1);
+            tom.setUserId(20);
+            RedisChatRoomParticipant jack = new RedisChatRoomParticipant();
+            jack.setParticipantId(2);
+            jack.setUserId(10);
 
             room.setEventHandler(this);
             room.join(tom);
