@@ -1,5 +1,6 @@
 package com.dudu.chat;
 
+import com.dudu.database.ZetaMap;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Date;
@@ -9,6 +10,16 @@ public class ChatMessage implements ChatParticipant {
     private long messageId;
     private Date createdAt;
     private String message;
+
+    public static ChatMessage from(ZetaMap zetaMap) {
+        ChatMessage chatMessage = new ChatMessage();
+        chatMessage.setMessageId(zetaMap.getLong("MessageId"));
+        chatMessage.setParticipantId(String.valueOf(zetaMap.getLong("ParticipantId")));
+        chatMessage.setMessage(zetaMap.getString("Message"));
+        chatMessage.setCreatedAt(zetaMap.getDate("CreatedAt"));
+
+        return chatMessage;
+    }
 
     public long getMessageId() {
         return messageId;

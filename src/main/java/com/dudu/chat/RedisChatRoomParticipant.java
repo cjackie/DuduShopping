@@ -1,5 +1,6 @@
 package com.dudu.chat;
 
+import com.dudu.database.ZetaMap;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Date;
@@ -9,6 +10,17 @@ public class RedisChatRoomParticipant implements ChatParticipant {
     private long userId;
     private String roomId;
     private Date joinedAt;
+
+
+    public static RedisChatRoomParticipant from(ZetaMap zetaMap) {
+        RedisChatRoomParticipant participant = new RedisChatRoomParticipant();
+        participant.setParticipantId(zetaMap.getLong("ParticipantId"));
+        participant.setUserId(zetaMap.getLong("UserId"));
+        participant.setRoomId(String.valueOf(zetaMap.getLong("RoomId")));
+        participant.setJoinedAt(zetaMap.getDate("JoinedAt"));
+
+        return participant;
+    }
 
     public long getParticipantId() {
         return participantId;
