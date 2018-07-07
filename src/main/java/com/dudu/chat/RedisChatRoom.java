@@ -11,17 +11,19 @@ import redis.clients.jedis.JedisPubSub;
 
 import java.util.*;
 
-
+/**
+ * redis chat room, in memory with no persistence.
+ */
 public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseable {
     private static final Logger logger = LogManager.getLogger(RedisChatRoom.class);
     private static final ObjectMapper objectMapper = StandardObjectMapper.getInstance();
     public static boolean DEBUG = false;
 
-    public static final int ACTION_TYPE_NEW_MESSAGE = 1;
+    protected static final int ACTION_TYPE_NEW_MESSAGE = 1;
 
-    public static final int ACTION_TYPE_PARTICIPANT_EXIT = 2;
+    protected static final int ACTION_TYPE_PARTICIPANT_EXIT = 2;
 
-    public static final int ACTION_TYPE_PARTICIPANT_JOIN = 3;
+    protected static final int ACTION_TYPE_PARTICIPANT_JOIN = 3;
 
     protected static final String REDIS_CHANNEL_PREFIX = RedisConstants.CHANNEL_CHATROOM;
 
@@ -29,17 +31,32 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
 
     protected static final String REDIS_CHAT_MESSAGES = RedisConstants.DATA_CHATROOM_MESSAGES;
 
+    protected static final String UNIVERSE_ROOM_ID = "UNIVERSE";
+
     protected JedisPool jedisPool;
     protected String roomId;
     protected ChatEventHandler eventHandler;
     protected PublishingListener listener;
 
     /**
+     * default room, which is the universe.
+     * @param jedisPool
+     * @throws Exception
+     */
+    public RedisChatRoom(JedisPool jedisPool) {
+        this.roomId = UNIVERSE_ROOM_ID;
+        this.jedisPool = jedisPool;
+
+        listener = new PublishingListener();
+        listener.start();
+    }
+
+    /**
      *
      * @param roomId a magic number. its uniqueness must be guaranteed.
      * @param jedisPool
      */
-    public RedisChatRoom(String roomId, JedisPool jedisPool) throws Exception {
+    public RedisChatRoom(String roomId, JedisPool jedisPool) {
         this.jedisPool = jedisPool;
         this.roomId = roomId;
 
@@ -110,6 +127,10 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         return roomId;
     }
 
+    protected void setRoomId(String roomId) {
+        this.roomId = roomId;
+    }
+
     /**
      * a new message is published. JSON format of ChatMessage
      * @return
@@ -150,7 +171,7 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         return REDIS_CHAT_MESSAGES + roomId;
     }
 
-    protected List<ChatMessage> getAllMessages() {
+    public List<ChatMessage> getAllMessages() {
         try (Jedis jedis = jedisPool.getResource()) {
             List<ChatMessage> messages = new ArrayList<>();
             for (String msg : jedis.lrange(redisKeyMessages(), 0, -1)) {
@@ -164,7 +185,7 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         }
     }
 
-    protected List<RedisChatRoomParticipant> getAllParticipants() {
+    public List<RedisChatRoomParticipant> getAllParticipants() {
         try (Jedis jedis = jedisPool.getResource()) {
             List<RedisChatRoomParticipant> participants = new ArrayList<>();
             for (String participant : jedis.hvals(redisKeyParticipants())) {
@@ -192,6 +213,11 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
             subscription = new JedisPubSub() {
                 @Override
                 public void onMessage(String channel, String data) {
+                    if (eventHandler == null) {
+                        logger.info("No handler");
+                        return;
+                    }
+
                     try {
                         if (channel.equals(actionTypeNewMessage())) {
                             if (DEBUG)
