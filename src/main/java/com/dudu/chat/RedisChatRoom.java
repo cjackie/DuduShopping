@@ -57,9 +57,9 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                 throw new IllegalArgumentException("Expecting RedisChatRoomParticipant.");
 
             if (!jedis.hexists(redisKeyParticipants(), participant.getChatParticipantId())) {
-                String data = objectMapper.writeValueAsString(participant);
-                jedis.hset(redisKeyParticipants(), participant.getChatParticipantId(), data);
-                jedis.publish(actionTypeParticipantJoin(), data);
+                String participantJson = objectMapper.writeValueAsString(participant);
+                jedis.hset(redisKeyParticipants(), participant.getChatParticipantId(), participantJson);
+                jedis.publish(actionTypeParticipantJoin(), participantJson);
             }
         } catch (Exception e) {
             logger.error("Failed to join a participant: ", e);
@@ -88,7 +88,14 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                 return;
             }
 
-            jedis.publish(actionTypeNewMessage(), objectMapper.writeValueAsString(message));
+            if (!jedis.hexists(redisKeyParticipants(), message.getChatParticipantId())) {
+                logger.warn("Unknown participant: ParticipantId=" + message.getParticipantId()
+                        + ", Message=" + message.getMessage());
+            }
+
+            String messageJson = objectMapper.writeValueAsString(message);
+            jedis.lpush(redisKeyMessages(), messageJson);
+            jedis.publish(actionTypeNewMessage(), messageJson);
         } catch (Exception e) {
             logger.error("Failed to publish: ", e);
         }
@@ -153,7 +160,20 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
             return messages;
         } catch (Exception e) {
             logger.error("Failed to getAllMessages:", e);
-            return null;
+            return new ArrayList<>();
+        }
+    }
+
+    protected List<RedisChatRoomParticipant> getAllParticipants() {
+        try (Jedis jedis = jedisPool.getResource()) {
+            List<RedisChatRoomParticipant> participants = new ArrayList<>();
+            for (String participant : jedis.hvals(redisKeyParticipants())) {
+                participants.add(objectMapper.readValue(participant, RedisChatRoomParticipant.class));
+            }
+            return participants;
+        } catch (Exception e) {
+            logger.error("Failed to getAllParticipants: ", e);
+            return new ArrayList<>();
         }
     }
 
@@ -178,12 +198,6 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                                 logger.debug("Getting a new message: " + data);
 
                             ChatMessage chatMessage = objectMapper.readValue(data, ChatMessage.class);
-                            try (Jedis jedis = jedisPool.getResource()) {
-                                if (!jedis.hexists(redisKeyParticipants(), chatMessage.getChatParticipantId()))
-                                    throw new IllegalArgumentException("Unknown participant: " + chatMessage.getParticipantId());
-
-                                jedis.lpush(redisKeyMessages(), objectMapper.writeValueAsString(data));
-                            }
                             eventHandler.receive(chatMessage);
                         } else if (channel.equals(actionTypeParticipantJoin())) {
                             eventHandler.onParticipantJoin(() -> data);

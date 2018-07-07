@@ -7,7 +7,7 @@ import java.util.Date;
 public class RedisChatRoomParticipant implements ChatParticipant {
     private long participantId;
     private long userId;
-    private long roomId;
+    private String roomId;
     private Date joinedAt;
 
     public long getParticipantId() {
@@ -26,20 +26,20 @@ public class RedisChatRoomParticipant implements ChatParticipant {
         this.userId = userId;
     }
 
-    public long getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(long roomId) {
-        this.roomId = roomId;
-    }
-
     public Date getJoinedAt() {
         return joinedAt;
     }
 
     public void setJoinedAt(Date joinedAt) {
         this.joinedAt = joinedAt;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
     }
 
     @JsonIgnore
