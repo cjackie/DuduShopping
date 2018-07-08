@@ -24,7 +24,7 @@ public class PersistentRedisChatRoom extends RedisChatRoom {
     private static final Logger logger = LogManager.getLogger(PersistentRedisChatRoom.class);
     private static final ObjectMapper objectMapper = StandardObjectMapper.getInstance();
 
-    private static RedisChatRoomParticipant NULL_PARTICIPANT = new RedisChatRoomParticipant() {{
+    private static ChatParticipant NULL_PARTICIPANT = new ChatParticipant() {{
         setParticipantId(-520);
     }};
 
@@ -79,14 +79,13 @@ public class PersistentRedisChatRoom extends RedisChatRoom {
             this.setRoomId(String.valueOf(roomId));
 
             // set up cache of this room
-            jedis.hset(redisKeyParticipants(), NULL_PARTICIPANT.getChatParticipantId(), objectMapper.writeValueAsString(NULL_PARTICIPANT));
+            jedis.hset(redisKeyParticipants(), String.valueOf(NULL_PARTICIPANT.getParticipantId()), objectMapper.writeValueAsString(NULL_PARTICIPANT));
             jedis.expire(redisKeyParticipants(), ttl);
 
             jedis.lpush(redisKeyMessages(), objectMapper.writeValueAsString(NULL_MESSAGE));
             jedis.expire(redisKeyMessages(), ttl);
         }
     }
-
 
     @Override
     public void join(ChatParticipant participant) {
@@ -116,7 +115,7 @@ public class PersistentRedisChatRoom extends RedisChatRoom {
              Jedis jedis = jedisPool.getResource()) {
 
             if (!jedis.exists(redisKeyParticipants())) {
-                jedis.hset(redisKeyParticipants(), NULL_PARTICIPANT.getChatParticipantId(), objectMapper.writeValueAsString(NULL_PARTICIPANT));
+                jedis.hset(redisKeyParticipants(), String.valueOf(NULL_PARTICIPANT.getParticipantId()), objectMapper.writeValueAsString(NULL_PARTICIPANT));
                 jedis.expire(redisKeyParticipants(), ttl);
 
                 // participants from database
@@ -124,8 +123,8 @@ public class PersistentRedisChatRoom extends RedisChatRoom {
                 List<ZetaMap> zetaMaps = DBHelper.getHelper().execToZetaMaps(conn, select, roomId);
 
                 for (ZetaMap zetaMap : zetaMaps) {
-                    RedisChatRoomParticipant participant = RedisChatRoomParticipant.from(zetaMap);
-                    jedis.hset(redisKeyParticipants(), participant.getChatParticipantId(), objectMapper.writeValueAsString(participant));
+                    ChatParticipant participant = ChatParticipant.from(zetaMap);
+                    jedis.hset(redisKeyParticipants(), String.valueOf(participant.getParticipantId()), objectMapper.writeValueAsString(participant));
                 }
             }
 
@@ -161,11 +160,11 @@ public class PersistentRedisChatRoom extends RedisChatRoom {
     }
 
     @Override
-    public List<RedisChatRoomParticipant> getAllParticipants() {
+    public List<ChatParticipant> getAllParticipants() {
         checkCache();
 
-        List<RedisChatRoomParticipant> participants = super.getAllParticipants();
-        participants.removeIf((p) -> p.getChatParticipantId().equals(NULL_PARTICIPANT.getChatParticipantId()));
+        List<ChatParticipant> participants = super.getAllParticipants();
+        participants.removeIf((p) -> p.getParticipantId() == NULL_PARTICIPANT.getParticipantId());
         return participants;
     }
 }

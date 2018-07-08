@@ -14,7 +14,7 @@ import java.util.List;
 
 public class RedisChatRoomTest extends TestBase implements ChatEventHandler {
     Logger logger = LogManager.getLogger(RedisChatRoomTest.class);
-    String roomId = "TEST14";
+    String roomId = "TEST15";
     RedisChatRoom room = null;
 
     @Before
@@ -32,10 +32,10 @@ public class RedisChatRoomTest extends TestBase implements ChatEventHandler {
 
     @Test
     public void twoFriendsChat() {
-        RedisChatRoomParticipant tom = new RedisChatRoomParticipant();
+        ChatParticipant tom = new ChatParticipant();
         tom.setParticipantId(1);
         tom.setUserId(20);
-        RedisChatRoomParticipant jack = new RedisChatRoomParticipant();
+        ChatParticipant jack = new ChatParticipant();
         jack.setParticipantId(2);
         jack.setUserId(10);
 
@@ -46,13 +46,13 @@ public class RedisChatRoomTest extends TestBase implements ChatEventHandler {
         ChatMessage tomSaid = new ChatMessage();
         tomSaid.setMessage("Hello, this is Tom");
         tomSaid.setCreatedAt(new Date());
-        tomSaid.setParticipantId(tom.getChatParticipantId());
+        tomSaid.setParticipantId(tom.getParticipantId());
         room.publish(tomSaid);
 
         ChatMessage jackSaid = new ChatMessage();
         jackSaid.setMessage("Hello, this is Jack");
         jackSaid.setCreatedAt(new Date());
-        jackSaid.setParticipantId(jack.getChatParticipantId());
+        jackSaid.setParticipantId(jack.getParticipantId());
         room.publish(jackSaid);
 
         while (true) { }
@@ -66,7 +66,7 @@ public class RedisChatRoomTest extends TestBase implements ChatEventHandler {
 
     @Test
     public void getAllParticipants() {
-        List<RedisChatRoomParticipant> participants = room.getAllParticipants();
+        List<ChatParticipant> participants = room.getAllParticipants();
         println(participants.size());
     }
 
@@ -80,25 +80,16 @@ public class RedisChatRoomTest extends TestBase implements ChatEventHandler {
 
     @Override
     public void receive(ChatMessage message) {
-        println(message.getChatParticipantId() + " said '" + message.getMessage() + "'");
+        println(message.getParticipantId() + " said '" + message.getMessage() + "'");
     }
 
     @Override
     public void onParticipantJoin(ChatParticipant participant) {
-        println(participant.getChatParticipantId() + " joins the room");
+        println(participant.getParticipantId() + " joins the room");
     }
 
     @Override
     public void onParticipantExit(ChatParticipant participant) {
-        println(participant.getChatParticipantId() + " exits the room");
-    }
-
-    private class ChatParticipantImpl implements ChatParticipant {
-        private String id;
-
-        @Override
-        public String getChatParticipantId() {
-            return id;
-        }
+        println(participant.getParticipantId() + " exits the room");
     }
 }

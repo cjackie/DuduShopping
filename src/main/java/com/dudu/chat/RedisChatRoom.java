@@ -67,15 +67,12 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
     @Override
     public void join(ChatParticipant participant) {
         if (DEBUG)
-            logger.debug("participant [" + participant.getChatParticipantId() + "] joins room [" + roomId + "]");
+            logger.debug("participant [" + participant.getParticipantId() + "] joins room [" + roomId + "]");
 
         try (Jedis jedis = jedisPool.getResource()) {
-            if (!(participant instanceof RedisChatRoomParticipant))
-                throw new IllegalArgumentException("Expecting RedisChatRoomParticipant.");
-
-            if (!jedis.hexists(redisKeyParticipants(), participant.getChatParticipantId())) {
+            if (!jedis.hexists(redisKeyParticipants(), String.valueOf(participant.getParticipantId()))) {
                 String participantJson = objectMapper.writeValueAsString(participant);
-                jedis.hset(redisKeyParticipants(), participant.getChatParticipantId(), participantJson);
+                jedis.hset(redisKeyParticipants(), String.valueOf(participant.getParticipantId()), participantJson);
                 jedis.publish(actionTypeParticipantJoin(), participantJson);
             }
         } catch (Exception e) {
@@ -86,12 +83,12 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
     @Override
     public void exit(ChatParticipant participant) {
         if (DEBUG)
-            logger.debug("participant [" + participant.getChatParticipantId() + "] exits room [" + roomId + "]");
+            logger.debug("participant [" + participant.getParticipantId() + "] exits room [" + roomId + "]");
 
         try (Jedis jedis = jedisPool.getResource()) {
-            if (jedis.hexists(redisKeyParticipants(), participant.getChatParticipantId())) {
-                jedis.hdel(redisKeyParticipants(), participant.getChatParticipantId());
-                jedis.publish(actionTypeParticipantExit(), String.valueOf(participant.getChatParticipantId()));
+            if (jedis.hexists(redisKeyParticipants(), String.valueOf(participant.getParticipantId()))) {
+                jedis.hdel(redisKeyParticipants(), String.valueOf(participant.getParticipantId()));
+                jedis.publish(actionTypeParticipantExit(), String.valueOf(participant.getParticipantId()));
             }
         }
     }
@@ -99,13 +96,13 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
     @Override
     public void publish(ChatMessage message) {
         try (Jedis jedis = jedisPool.getResource()) {
-            if (!jedis.hexists(redisKeyParticipants(), message.getChatParticipantId())) {
+            if (!jedis.hexists(redisKeyParticipants(), String.valueOf(message.getParticipantId()))) {
                 logger.warn("Participant is not this room: participantId="
-                        + message.getChatParticipantId() + ", roomId=" + roomId);
+                        + message.getParticipantId() + ", roomId=" + roomId);
                 return;
             }
 
-            if (!jedis.hexists(redisKeyParticipants(), message.getChatParticipantId())) {
+            if (!jedis.hexists(redisKeyParticipants(), String.valueOf(message.getParticipantId()))) {
                 logger.warn("Unknown participant: ParticipantId=" + message.getParticipantId()
                         + ", Message=" + message.getMessage());
             }
@@ -185,11 +182,11 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
         }
     }
 
-    public List<RedisChatRoomParticipant> getAllParticipants() {
+    public List<ChatParticipant> getAllParticipants() {
         try (Jedis jedis = jedisPool.getResource()) {
-            List<RedisChatRoomParticipant> participants = new ArrayList<>();
+            List<ChatParticipant> participants = new ArrayList<>();
             for (String participant : jedis.hvals(redisKeyParticipants())) {
-                participants.add(objectMapper.readValue(participant, RedisChatRoomParticipant.class));
+                participants.add(objectMapper.readValue(participant, ChatParticipant.class));
             }
             return participants;
         } catch (Exception e) {
@@ -226,9 +223,11 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                             ChatMessage chatMessage = objectMapper.readValue(data, ChatMessage.class);
                             eventHandler.receive(chatMessage);
                         } else if (channel.equals(actionTypeParticipantJoin())) {
-                            eventHandler.onParticipantJoin(() -> data);
+                            ChatParticipant participant = objectMapper.readValue(data, ChatParticipant.class);
+                            eventHandler.onParticipantJoin(participant);
                         } else if (channel.equals(actionTypeParticipantExit())) {
-                            eventHandler.onParticipantExit(() -> data);
+                            ChatParticipant participant = objectMapper.readValue(data, ChatParticipant.class);
+                            eventHandler.onParticipantExit(participant);
                         } else {
                             throw new IllegalStateException("Unknown channel: " + channel);
                         }

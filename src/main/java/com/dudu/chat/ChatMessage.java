@@ -1,12 +1,11 @@
 package com.dudu.chat;
 
 import com.dudu.database.ZetaMap;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Date;
 
-public class ChatMessage implements ChatParticipant {
-    private String participantId;
+public class ChatMessage {
+    private long participantId;
     private long messageId;
     private Date createdAt;
     private String message;
@@ -14,7 +13,7 @@ public class ChatMessage implements ChatParticipant {
     public static ChatMessage from(ZetaMap zetaMap) {
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setMessageId(zetaMap.getLong("MessageId"));
-        chatMessage.setParticipantId(String.valueOf(zetaMap.getLong("ParticipantId")));
+        chatMessage.setParticipantId(zetaMap.getLong("ParticipantId"));
         chatMessage.setMessage(zetaMap.getString("Message"));
         chatMessage.setCreatedAt(zetaMap.getDate("CreatedAt"));
 
@@ -45,17 +44,11 @@ public class ChatMessage implements ChatParticipant {
         return message;
     }
 
-    public String getParticipantId() {
+    public long getParticipantId() {
         return this.participantId;
     }
 
-    public void setParticipantId(String participantId) {
+    public void setParticipantId(long participantId) {
         this.participantId = participantId;
-    }
-
-    @Override
-    @JsonIgnore
-    public String getChatParticipantId() {
-        return String.valueOf(participantId);
     }
 }
