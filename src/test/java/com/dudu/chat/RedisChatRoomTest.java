@@ -22,7 +22,6 @@ public class RedisChatRoomTest extends TestBase implements ChatEventHandler {
         super.setup();
         Assume.assumeTrue(ready);
 
-        RedisChatRoom.DEBUG = true;
         try {
             room = new RedisChatRoom(String.valueOf(roomId), DBManager.getManager().getChatRoomRedisPool());
         } catch (Exception e) {

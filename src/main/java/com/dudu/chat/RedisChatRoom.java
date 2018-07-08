@@ -17,7 +17,6 @@ import java.util.*;
 public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseable {
     private static final Logger logger = LogManager.getLogger(RedisChatRoom.class);
     private static final ObjectMapper objectMapper = StandardObjectMapper.getInstance();
-    public static boolean DEBUG = false;
 
     protected static final int ACTION_TYPE_NEW_MESSAGE = 1;
 
@@ -66,8 +65,7 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
 
     @Override
     public void join(ChatParticipant participant) {
-        if (DEBUG)
-            logger.debug("participant [" + participant.getParticipantId() + "] joins room [" + roomId + "]");
+        logger.debug("participant [" + participant.getParticipantId() + "] joins room [" + roomId + "]");
 
         try (Jedis jedis = jedisPool.getResource()) {
             if (!jedis.hexists(redisKeyParticipants(), String.valueOf(participant.getParticipantId()))) {
@@ -82,8 +80,7 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
 
     @Override
     public void exit(ChatParticipant participant) {
-        if (DEBUG)
-            logger.debug("participant [" + participant.getParticipantId() + "] exits room [" + roomId + "]");
+        logger.debug("participant [" + participant.getParticipantId() + "] exits room [" + roomId + "]");
 
         try (Jedis jedis = jedisPool.getResource()) {
             if (jedis.hexists(redisKeyParticipants(), String.valueOf(participant.getParticipantId()))) {
@@ -215,11 +212,9 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                         return;
                     }
 
+                    logger.debug("Receive a channel data: channel=" + channel, ", data=" + data);
                     try {
                         if (channel.equals(actionTypeNewMessage())) {
-                            if (DEBUG)
-                                logger.debug("Getting a new message: " + data);
-
                             ChatMessage chatMessage = objectMapper.readValue(data, ChatMessage.class);
                             eventHandler.receive(chatMessage);
                         } else if (channel.equals(actionTypeParticipantJoin())) {
@@ -253,8 +248,7 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                 jedis.close();
                 while (!stop) { }
 
-                if (DEBUG)
-                    logger.debug("exiting subscription");
+                logger.debug("exiting subscription");
             }
         }
     }
