@@ -4,7 +4,7 @@ import com.dudu.database.ZetaMap;
 
 import java.util.Date;
 
-public class ChatMessage {
+class ChatMessage {
     private long participantId;
     private long messageId;
     private Date createdAt;

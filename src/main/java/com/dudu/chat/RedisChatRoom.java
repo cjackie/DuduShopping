@@ -193,7 +193,7 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         listener.stop = true;
         listener.subscription.unsubscribe();
     }
