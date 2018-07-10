@@ -11,7 +11,7 @@ ALTER PROCEDURE sp_ChatRoomUserJoin(
   IF @@ROWCOUNT <> 1 BEGIN
     -- user is not in the room. join the room now
     INSERT INTO ChatRoomParticipants(UserId, RoomId) VALUES (@UserId, @RoomId)
-    SET @ParticipantId = @@IDENTITY, @Error = @@ERROR
+    SELECT @ParticipantId = @@IDENTITY, @Error = @@ERROR
   END
 
   SELECT @UserId AS UserId, @ParticipantId AS ParticipantId, @RoomId AS RoomId, @JoinedAt AS JoinedAt, @Error AS Error

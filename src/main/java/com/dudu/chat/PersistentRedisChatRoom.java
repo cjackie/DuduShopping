@@ -53,8 +53,8 @@ public class PersistentRedisChatRoom extends RedisChatRoom {
      * @param source where messages will be stored.
      * @throws Exception
      */
-    public PersistentRedisChatRoom(String roomId, JedisPool jedisPool, DataSource source) throws Exception {
-        super(roomId, jedisPool);
+    public PersistentRedisChatRoom(long roomId, JedisPool jedisPool, DataSource source) {
+        super(String.valueOf(roomId), jedisPool);
         this.source = source;
         this.workingQueue = new ArrayBlockingQueue<>(100);
         this.threadPoolExecutor = new ThreadPoolExecutor(1, 4, 1, TimeUnit.MINUTES, workingQueue);
@@ -74,6 +74,12 @@ public class PersistentRedisChatRoom extends RedisChatRoom {
      */
     public PersistentRedisChatRoom(JedisPool jedisPool, DataSource source, String roomName) throws Exception {
         super(jedisPool);
+        this.source = source;
+        this.workingQueue = new ArrayBlockingQueue<>(100);
+        this.threadPoolExecutor = new ThreadPoolExecutor(1, 4, 1, TimeUnit.MINUTES, workingQueue);
+        this.monitorThread = new MonitorThread();
+        this.monitorThread.start();
+
         try (Connection conn = source.getConnection();
              Jedis jedis = jedisPool.getResource()) {
 
@@ -233,10 +239,10 @@ public class PersistentRedisChatRoom extends RedisChatRoom {
         return participants;
     }
 
-    public ChatParticipant createNewParticipant(long userId, long roomId) {
+    public ChatParticipant createNewParticipant(long userId) {
         ChatParticipant chatParticipant = new ChatParticipant();
-        chatParticipant.setRoomId(userId);
-        chatParticipant.setRoomId(roomId);
+        chatParticipant.setUserId(userId);
+        chatParticipant.setRoomId(Long.parseLong(roomId));
         return chatParticipant;
     }
 

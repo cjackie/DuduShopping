@@ -99,11 +99,6 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
                 return;
             }
 
-            if (!jedis.hexists(redisKeyParticipants(), String.valueOf(message.getParticipantId()))) {
-                logger.warn("Unknown participant: ParticipantId=" + message.getParticipantId()
-                        + ", Message=" + message.getMessage());
-            }
-
             String messageJson = objectMapper.writeValueAsString(message);
             jedis.lpush(redisKeyMessages(), messageJson);
             jedis.publish(actionTypeNewMessage(), messageJson);
@@ -123,6 +118,12 @@ public class RedisChatRoom extends JedisPubSub implements ChatRoom, AutoCloseabl
 
     protected void setRoomId(String roomId) {
         this.roomId = roomId;
+
+        // start the listen on the new room
+        listener.stop = true;
+
+        listener = new PublishingListener();
+        listener.start();
     }
 
     /**
